@@ -1,0 +1,88 @@
+// =============================================================================
+// proto/user.proto
+// Project: DevMatch
+//
+// PURPOSE:
+//   Defines the gRPC contract for the User Service.
+//   This file is the source of truth for inter-service communication
+//   between the User Service (server) and Match Service (client in Step 6).
+//
+// WHY gRPC + PROTO FILES:
+//   HTTP/REST uses JSON which is schema-less — a typo in a field name silently
+//   breaks things. Protocol Buffers (proto) define a strict typed schema.
+//   Both the server and client generate code from this same file, so if
+//   the schema changes, compilation fails instead of silently breaking.
+//
+//   gRPC also uses HTTP/2 under the hood, which supports multiplexing
+//   (many requests over one connection) and binary encoding (faster than JSON).
+//
+// HOW TO READ THIS FILE:
+//   - `service` defines the available RPC methods (like an interface/API spec)
+//   - `message` defines the data shapes (like TypeScript interfaces)
+//   - Field numbers (= 1, = 2) are used in binary encoding — never reuse them
+//
+// USAGE:
+//   User Service loads this file to create a gRPC server.
+//   Match Service loads this file to create a gRPC client stub.
+//   Both use @grpc/proto-loader to load .proto files at runtime (no codegen needed).
+// =============================================================================
+
+syntax = "proto3";
+
+package user;
+
+// =============================================================================
+// UserService
+//
+// Defines the RPC methods the User Service exposes over gRPC.
+// The Match Service calls these when it needs profile data.
+//
+// WHY MATCH SERVICE CALLS USER SERVICE VIA gRPC:
+//   When a match is detected, Match Service needs both users' names/photos
+//   to populate the match notification. It calls GetUserProfile twice —
+//   once for each matched user. gRPC is used here (not Kafka) because
+//   Match Service needs the data synchronously before it can continue.
+// =============================================================================
+service UserService {
+
+  // GetUserProfile — fetch one user's profile by their UUID
+  // Called by: Match Service (to get profile details when creating a match)
+  rpc GetUserProfile (GetUserProfileRequest) returns (UserProfile);
+
+  // GetMultipleProfiles — fetch several profiles in one call
+  // Called by: Match Service (to fetch both matched users' profiles at once)
+  rpc GetMultipleProfiles (GetMultipleProfilesRequest) returns (MultipleProfilesResponse);
+}
+
+// =============================================================================
+// REQUEST MESSAGES
+// =============================================================================
+
+// Request for a single user profile
+message GetUserProfileRequest {
+  string user_id = 1;  // UUID of the user whose profile to fetch
+}
+
+// Request for multiple profiles at once (batch lookup)
+message GetMultipleProfilesRequest {
+  repeated string user_ids = 1;  // List of UUIDs to fetch
+}
+
+// =============================================================================
+// RESPONSE MESSAGES
+// =============================================================================
+
+// A single developer profile
+message UserProfile {
+  string id        = 1;  // UUID — matches credentials.id in auth_db
+  string name      = 2;  // Display name
+  string bio       = 3;  // Short developer bio
+  repeated string skills = 4;  // e.g. ["React", "Node.js", "Go"]
+  string github_url = 5;
+  string photo_url  = 6;
+}
+
+// Response for a batch profile lookup
+message MultipleProfilesResponse {
+  repeated UserProfile profiles = 1;
+}

@@ -1,0 +1,33 @@
+// =============================================================================
+// proto/match.proto
+// Project: DevMatch
+//
+// PURPOSE:
+//   gRPC contract for the Match Service.
+//
+// SERVER:  Match Service (implements this)
+// CLIENTS:
+//   - Chat Service (Step 7) — calls CheckMatchExists before allowing messages
+// =============================================================================
+
+syntax = "proto3";
+
+package match;
+
+service MatchService {
+
+  // CheckMatchExists — called by Chat Service before allowing a message.
+  // Verifies that user1 and user2 have a confirmed mutual match.
+  // Prevents messaging strangers who haven't matched.
+  rpc CheckMatchExists (CheckMatchExistsRequest) returns (CheckMatchExistsResponse);
+}
+
+message CheckMatchExistsRequest {
+  string user1_id = 1;  // One of the two users
+  string user2_id = 2;  // The other user
+}
+
+message CheckMatchExistsResponse {
+  bool exists   = 1;  // true if a confirmed match record exists
+  string match_id = 2;  // UUID of the match record (useful for chat room naming)
+}

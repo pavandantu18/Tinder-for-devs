@@ -8,6 +8,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useNotifications from '../hooks/useNotifications';
+import { BellIcon } from './Icons';
 import '../styles/notifications.css';
 
 const NotificationBell = ({ isLoggedIn }) => {
@@ -43,7 +44,7 @@ const NotificationBell = ({ isLoggedIn }) => {
   return (
     <div className="notif-bell-wrapper" ref={panelRef}>
       <button className="notif-bell-btn" onClick={handleOpen} title="Notifications">
-        🔔
+        <BellIcon size={19} />
         {unreadCount > 0 && (
           <span className="notif-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
         )}
@@ -68,9 +69,7 @@ const NotificationBell = ({ isLoggedIn }) => {
                   className={`notif-item ${!n.isRead ? 'unread' : ''} ${n.type === 'new_match' || n.type === 'new_message' ? 'clickable' : ''}`}
                   onClick={() => handleNotifClick(n)}
                 >
-                  <span className="notif-icon">
-                    {n.type === 'new_match'   ? '❤️' : '💬'}
-                  </span>
+                  <span className={`notif-icon ${n.type === 'new_match' ? 'notif-icon-match' : 'notif-icon-msg'}`} />
                   <div className="notif-content">
                     <p className="notif-title">{n.title}</p>
                     {n.body && <p className="notif-body">{n.body}</p>}

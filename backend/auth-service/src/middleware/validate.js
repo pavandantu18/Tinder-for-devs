@@ -62,11 +62,24 @@ const validateRegister = (req, res, next) => {
     });
   }
 
-  // Password length — 8 characters minimum
+  // Strong password rules
   if (password.length < 8) {
-    return res.status(400).json({
-      error: 'Password must be at least 8 characters long',
-    });
+    return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+  }
+  if (password.length > 128) {
+    return res.status(400).json({ error: 'Password must be under 128 characters.' });
+  }
+  if (!/[A-Z]/.test(password)) {
+    return res.status(400).json({ error: 'Password must contain at least one uppercase letter.' });
+  }
+  if (!/[a-z]/.test(password)) {
+    return res.status(400).json({ error: 'Password must contain at least one lowercase letter.' });
+  }
+  if (!/[0-9]/.test(password)) {
+    return res.status(400).json({ error: 'Password must contain at least one number.' });
+  }
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    return res.status(400).json({ error: 'Password must contain at least one special character (e.g. @, #, $, !).' });
   }
 
   // Sanitize: trim whitespace from email (not password — spaces may be intentional)

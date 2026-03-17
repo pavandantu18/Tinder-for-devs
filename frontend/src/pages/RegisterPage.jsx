@@ -17,7 +17,17 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
+import { LogoIcon } from '../components/Icons';
 import '../styles/auth.css';
+
+// Password strength rules — must match backend validate.js exactly
+const rules = [
+  { id: 'len',   label: 'At least 8 characters',          test: (p) => p.length >= 8 },
+  { id: 'upper', label: 'One uppercase letter (A–Z)',      test: (p) => /[A-Z]/.test(p) },
+  { id: 'lower', label: 'One lowercase letter (a–z)',      test: (p) => /[a-z]/.test(p) },
+  { id: 'num',   label: 'One number (0–9)',                test: (p) => /[0-9]/.test(p) },
+  { id: 'sym',   label: 'One special character (@#$!…)',   test: (p) => /[^A-Za-z0-9]/.test(p) },
+];
 
 const RegisterPage = () => {
   const [email, setEmail] = useState('');
@@ -25,26 +35,27 @@ const RegisterPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showRules, setShowRules] = useState(false);
 
   const { authLogin } = useAuth();
   const navigate = useNavigate();
 
+  const passed = rules.filter((r) => r.test(password));
+  const allPassed = passed.length === rules.length;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Client-side validation before touching the network
     if (!email || !password || !confirmPassword) {
       setError('Please fill in all fields.');
       return;
     }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+    if (!allPassed) {
+      setError('Please meet all password requirements.');
       return;
     }
-
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
 
@@ -82,7 +93,7 @@ const RegisterPage = () => {
       <div className="auth-card">
 
         <div className="auth-logo">
-          <span className="auth-logo-icon">💻</span>
+          <span className="auth-logo-icon"><LogoIcon size={28} /></span>
           <h1>DevMatch</h1>
           <p>Create your developer profile</p>
         </div>
@@ -107,11 +118,33 @@ const RegisterPage = () => {
             <input
               id="password"
               type="password"
-              placeholder="At least 8 characters"
+              placeholder="Create a strong password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => setShowRules(true)}
               autoComplete="new-password"
             />
+            {/* Strength bar */}
+            {password.length > 0 && (
+              <div className="pw-strength-bar">
+                {rules.map((r, i) => (
+                  <div
+                    key={r.id}
+                    className={`pw-strength-seg ${i < passed.length ? 'filled' : ''} ${passed.length === rules.length ? 'strong' : passed.length >= 3 ? 'medium' : 'weak'}`}
+                  />
+                ))}
+              </div>
+            )}
+            {/* Rules checklist */}
+            {showRules && (
+              <ul className="pw-rules">
+                {rules.map((r) => (
+                  <li key={r.id} className={r.test(password) ? 'rule-ok' : 'rule-fail'}>
+                    {r.test(password) ? '✓' : '○'} {r.label}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div className="form-group">

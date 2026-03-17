@@ -1,0 +1,49 @@
+// =============================================================================
+// proto/swipe.proto
+// Project: DevMatch
+//
+// PURPOSE:
+//   gRPC contract for the Swipe Service.
+//
+// SERVERS: Swipe Service (implements this)
+// CLIENTS:
+//   - Match Service (Step 6) — calls CheckMutualLike to detect matches
+//   - User Service           — calls GetSwipedUserIds to filter /discover feed
+// =============================================================================
+
+syntax = "proto3";
+
+package swipe;
+
+service SwipeService {
+
+  // CheckMutualLike — called by Match Service when a LIKE swipe arrives.
+  // Checks whether the target user has already liked the swiper back.
+  // If yes → mutual match → Match Service creates the match.
+  rpc CheckMutualLike (CheckMutualLikeRequest) returns (CheckMutualLikeResponse);
+
+  // GetSwipedUserIds — called by User Service to filter /discover.
+  // Returns all user IDs that `userId` has already swiped on (LIKE or PASS).
+  // User Service excludes these from the discovery feed so users
+  // don't see profiles they've already acted on.
+  rpc GetSwipedUserIds (GetSwipedUserIdsRequest) returns (GetSwipedUserIdsResponse);
+}
+
+// Check if swiper_id has already liked target_id
+message CheckMutualLikeRequest {
+  string swiper_id = 1;  // The user who just liked
+  string target_id = 2;  // The user being checked for a reverse like
+}
+
+message CheckMutualLikeResponse {
+  bool liked = 1;  // true if target_id has a LIKE on swiper_id
+}
+
+// Get all user IDs that a user has already swiped on
+message GetSwipedUserIdsRequest {
+  string user_id = 1;  // The user whose swipe history we want
+}
+
+message GetSwipedUserIdsResponse {
+  repeated string swiped_user_ids = 1;  // UUIDs of all swiped profiles
+}

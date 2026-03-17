@@ -645,9 +645,7 @@ services:
   # Exposes gRPC server (port 50052) for Match Service lookups (Step 6).
   # ===========================================================================
   user-service:
-    build:
-      context: .                                  # project root — gives access to proto/
-      dockerfile: ./backend/user-service/Dockerfile
+    build: ./backend/user-service
     container_name: devmatch-user-service
     networks:
       - devmatch-network
@@ -688,9 +686,7 @@ services:
   #   - Match Service: CheckMutualLike (detect mutual matches)
   # ===========================================================================
   swipe-service:
-    build:
-      context: .                                    # project root — gives access to proto/
-      dockerfile: ./backend/swipe-service/Dockerfile
+    build: ./backend/swipe-service
     container_name: devmatch-swipe-service
     networks:
       - devmatch-network
@@ -729,9 +725,7 @@ services:
   # Exposes gRPC server (port 50054) for Chat Service (CheckMatchExists).
   # ===========================================================================
   match-service:
-    build:
-      context: .
-      dockerfile: ./backend/match-service/Dockerfile
+    build: ./backend/match-service
     container_name: devmatch-match-service
     networks:
       - devmatch-network
@@ -776,9 +770,7 @@ services:
   # Stores messages in MongoDB.
   # ===========================================================================
   chat-service:
-    build:
-      context: .
-      dockerfile: ./backend/chat-service/Dockerfile
+    build: ./backend/chat-service
     container_name: devmatch-chat-service
     networks:
       - devmatch-network

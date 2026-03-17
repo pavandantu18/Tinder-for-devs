@@ -87,30 +87,29 @@ const createNotification = async (userId, type, title, body = '', data = {}) => 
 const handleMatchCreated = async ({ matchId, user1Id, user2Id }) => {
   await createNotification(
     user1Id, 'new_match',
-    'You have a new match! 🎉',
-    'Start a conversation now.',
+    "It's a match!",
+    'You and someone both liked each other. Say hello.',
     { matchId, otherUserId: user2Id }
   );
   await createNotification(
     user2Id, 'new_match',
-    'You have a new match! 🎉',
-    'Start a conversation now.',
+    "It's a match!",
+    'You and someone both liked each other. Say hello.',
     { matchId, otherUserId: user1Id }
   );
   console.log(`[Service] Match notifications created for ${user1Id} and ${user2Id}`);
 };
 
 // message.sent → notify the recipient (not the sender)
-const handleMessageSent = async ({ roomId, senderId, recipientId, text, type }) => {
+const handleMessageSent = async ({ roomId, senderId, senderName, recipientId, text, type }) => {
   if (!recipientId) return;
 
-  // Use the message text as the notification body.
-  // Media labels ('📷 Photo' etc.) come pre-formatted from chat-service.
-  const body = text || '';
+  const name  = senderName || 'Your match';
+  const body  = text || '';
 
   await createNotification(
     recipientId, 'new_message',
-    'New message from your match',
+    `New message from ${name}`,
     body,
     { roomId, senderId }
   );

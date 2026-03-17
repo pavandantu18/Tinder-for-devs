@@ -20,3 +20,9 @@ export const getMatches = async (page = 1, limit = 20) => {
   const response = await api.get(`/matches?page=${page}&limit=${limit}`);
   return response.data;
 };
+
+// Fetch a single match by id (used when navigating from a notification)
+export const getMatch = async (matchId) => {
+  const { matches } = await getMatches(1, 100);
+  return matches.find((m) => m.id === matchId) || null;
+};

@@ -26,6 +26,7 @@ import { Link } from 'react-router-dom';
 import { discoverProfiles } from '../api/user';
 import { recordSwipe } from '../api/swipe';
 import NavBar from '../components/NavBar';
+import { CloseIcon, HeartIcon, LogoIcon } from '../components/Icons';
 import '../styles/discover.css';
 
 const DiscoverPage = () => {
@@ -126,7 +127,10 @@ const DiscoverPage = () => {
     <div className="discover-page">
       {/* Header */}
       <div className="discover-header">
-        <h1 className="discover-title">DevMatch</h1>
+        <div className="discover-title">
+          <LogoIcon size={22} />
+          <span>DevMatch</span>
+        </div>
         <span className="discover-count">
           {profiles.length - currentIndex} left
         </span>
@@ -155,10 +159,10 @@ const DiscoverPage = () => {
 
               {/* Swipe indicators */}
               {swiping === 'like' && (
-                <div className="swipe-indicator like-indicator">LIKE ❤️</div>
+                <div className="swipe-indicator like-indicator">LIKE</div>
               )}
               {swiping === 'pass' && (
-                <div className="swipe-indicator pass-indicator">NOPE 👎</div>
+                <div className="swipe-indicator pass-indicator">NOPE</div>
               )}
 
               {/* Profile info overlaid on photo */}
@@ -207,7 +211,7 @@ const DiscoverPage = () => {
                 disabled={!!swiping}
                 aria-label="Pass"
               >
-                👎
+                <CloseIcon size={28} />
               </button>
               <button
                 className="btn-like"
@@ -215,7 +219,7 @@ const DiscoverPage = () => {
                 disabled={!!swiping}
                 aria-label="Like"
               >
-                ❤️
+                <HeartIcon size={30} />
               </button>
             </div>
           </div>

@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(docker compose:*)",
-      "Read(//mnt/c/Users/pavan/OneDrive/Desktop/Tinder_Developers/frontend/src/**)"
-    ]
-  }
-}

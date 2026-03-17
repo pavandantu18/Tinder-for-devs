@@ -1,97 +1,98 @@
-/* =============================================================================
-   Discover / Swipe page  —  fullscreen Tinder-style
-   ============================================================================= */
-
 .discover-page {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg-primary);
+  background: var(--bg);
   overflow: hidden;
-  position: relative;
 }
 
-/* Mini top bar */
 .discover-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   padding: 14px 20px 8px;
   flex-shrink: 0;
-  position: relative;
 }
 
 .discover-title {
-  font-size: 22px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 20px;
   font-weight: 900;
   letter-spacing: -0.4px;
-  background: var(--brand-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
+  color: var(--pink);
 }
 
 .discover-count {
-  position: absolute;
-  right: 20px;
   font-size: 12px;
-  color: var(--text-muted);
-  background: var(--bg-elevated);
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
+  color: var(--t2);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px);
+  padding: 4px 12px;
+  border-radius: var(--r-pill);
+  font-weight: 500;
 }
 
 .discover-error {
-  color: var(--error);
+  color: var(--pass);
   font-size: 13px;
   text-align: center;
   padding: 4px 16px;
   flex-shrink: 0;
 }
 
-/* Card area — takes up remaining space above nav */
+/* Card area */
 .card-stack {
   flex: 1;
   display: flex;
   align-items: stretch;
   justify-content: center;
-  padding: 8px 12px 0;
+  padding: 4px 12px 0;
   overflow: hidden;
+  min-height: 0;
 }
 
-/* ============================================================
-   Swipe card
-   ============================================================ */
+/* ── Swipe card — glassmorphism ── */
 .swipe-card {
   width: 100%;
   max-width: 420px;
+  border-radius: 26px;
+  overflow: hidden;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;
-  border-radius: var(--radius-2xl);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  background: var(--bg-card);
+  box-shadow:
+    0 24px 60px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: transform 0.3s cubic-bezier(.25,.46,.45,.94), opacity 0.3s ease;
   position: relative;
-  transition: transform 0.28s cubic-bezier(.25,.46,.45,.94), opacity 0.28s ease;
 }
 
-.swipe-card.swiping-like {
-  transform: translateX(80px) rotate(8deg);
-  opacity: 0.7;
-}
-.swipe-card.swiping-pass {
-  transform: translateX(-80px) rotate(-8deg);
-  opacity: 0.7;
+.swipe-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
 }
 
-/* Photo — fills most of the card */
+.swipe-card.swiping-like  { transform: translateX(110px) rotate(9deg);  opacity: 0.5; }
+.swipe-card.swiping-pass  { transform: translateX(-110px) rotate(-9deg); opacity: 0.5; }
+
+/* Photo */
 .card-photo {
   position: relative;
   flex: 1;
-  background: #111;
   overflow: hidden;
   min-height: 0;
+  background: rgba(255,255,255,0.02);
 }
 
 .card-photo img {
@@ -104,28 +105,23 @@
 .card-photo-placeholder {
   width: 100%;
   height: 100%;
+  min-height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 7rem;
+  font-size: 4.5rem;
   font-weight: 900;
-  color: rgba(253,41,123,0.35);
-  background: linear-gradient(160deg, #1a0d14 0%, #0d0d0d 100%);
-  min-height: 200px;
+  color: rgba(255,45,107,0.15);
 }
 
-/* Gradient overlay */
 .card-photo-overlay {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 70%;
+  inset: 0;
   background: linear-gradient(
     to top,
-    rgba(0,0,0,0.95) 0%,
-    rgba(0,0,0,0.6)  35%,
-    transparent      100%
+    rgba(0,0,0,0.96) 0%,
+    rgba(0,0,0,0.55) 38%,
+    transparent      68%
   );
   pointer-events: none;
 }
@@ -133,73 +129,78 @@
 /* Swipe indicators */
 .swipe-indicator {
   position: absolute;
-  top: 24px;
-  font-size: 1.1rem;
+  top: 22px;
+  font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0.1em;
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
-  border: 3px solid;
+  letter-spacing: 3px;
   text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 2.5px solid;
+  z-index: 10;
 }
 
 .like-indicator {
-  left: 20px;
+  left: 18px;
   color: var(--like);
   border-color: var(--like);
-  background: rgba(32,226,119,0.12);
-  transform: rotate(-12deg);
+  background: rgba(0,214,143,0.08);
+  backdrop-filter: blur(6px);
+  transform: rotate(-10deg);
 }
 
 .pass-indicator {
-  right: 20px;
+  right: 18px;
   color: var(--pass);
   border-color: var(--pass);
-  background: rgba(255,59,48,0.12);
-  transform: rotate(12deg);
+  background: rgba(255,56,96,0.08);
+  backdrop-filter: blur(6px);
+  transform: rotate(10deg);
 }
 
-/* Info overlay — sits at the bottom of the photo */
+/* Info overlay — sits atop the photo gradient */
 .card-overlay-info {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0 20px 16px;
+  padding: 0 20px 18px;
+  z-index: 2;
 }
 
 .card-name-row {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 9px;
   margin-bottom: 4px;
 }
 
 .card-name {
-  font-size: 1.8rem;
+  font-size: 28px;
   font-weight: 800;
   color: #fff;
   margin: 0;
+  letter-spacing: -0.4px;
   line-height: 1.1;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  text-shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
 
 .card-age {
-  font-size: 1.4rem;
-  font-weight: 400;
-  color: rgba(255,255,255,0.85);
+  font-size: 22px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.7);
 }
 
 .card-location {
   font-size: 13px;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255,255,255,0.55);
   margin: 0 0 8px;
 }
 
 .card-bio {
   font-size: 13px;
-  color: rgba(255,255,255,0.75);
-  line-height: 1.4;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.45;
   margin: 0 0 10px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -215,102 +216,99 @@
 }
 
 .card-skills .skill-tag {
-  background: rgba(0,0,0,0.4);
-  color: rgba(255,255,255,0.9);
-  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.85);
+  border: 1px solid rgba(255,255,255,0.15);
   padding: 3px 10px;
-  border-radius: var(--radius-full);
-  font-size: 12px;
+  border-radius: var(--r-pill);
+  font-size: 11px;
   font-weight: 500;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
 }
 
 .card-github {
-  display: inline-block;
   font-size: 12px;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.4);
   text-decoration: none;
+  transition: color 0.15s;
 }
-.card-github:hover { color: #fff; }
+.card-github:hover { color: rgba(255,255,255,0.75); }
 
-/* Action buttons — fixed below card */
+/* ── Action buttons ── */
 .card-actions {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 28px;
-  padding: 14px 20px calc(var(--nav-height) + 10px);
+  gap: 40px;
+  padding: 16px 20px calc(var(--nav-h) + 12px);
   flex-shrink: 0;
-  background: var(--bg-primary);
+  background: transparent;
 }
 
 .btn-pass {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  border: 2px solid rgba(255,59,48,0.35);
-  background: rgba(255,59,48,0.07);
+  border: 1.5px solid rgba(255,56,96,0.3);
+  background: rgba(255,56,96,0.05);
+  backdrop-filter: blur(10px);
+  color: var(--pass);
   cursor: pointer;
-  font-size: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s, background 0.15s, border-color 0.15s;
+  transition: background 0.18s, border-color 0.18s, transform 0.14s, box-shadow 0.18s;
   -webkit-tap-highlight-color: transparent;
 }
 .btn-pass:hover:not(:disabled) {
-  transform: scale(1.1);
-  background: rgba(255,59,48,0.15);
+  background: rgba(255,56,96,0.12);
   border-color: var(--pass);
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(255,56,96,0.25);
 }
 
 .btn-like {
-  width: 70px;
-  height: 70px;
+  width: 74px;
+  height: 74px;
   border-radius: 50%;
   border: none;
-  background: var(--brand-gradient);
+  background: var(--brand);
+  color: #fff;
   cursor: pointer;
-  font-size: 1.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-button);
-  transition: transform 0.15s, opacity 0.15s;
+  box-shadow:
+    0 6px 28px rgba(255,45,107,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: transform 0.14s, box-shadow 0.18s, opacity 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
 .btn-like:hover:not(:disabled) {
   transform: scale(1.1);
+  box-shadow: 0 10px 36px rgba(255,45,107,0.65);
   opacity: 0.92;
 }
 
-.btn-pass:disabled,
-.btn-like:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+.btn-pass:active:not(:disabled),
+.btn-like:active:not(:disabled) {
+  transform: scale(0.94);
+  transition-duration: 0.08s;
 }
 
-/* States */
-.discover-loading,
-.card-loading {
+.btn-pass:disabled, .btn-like:disabled { opacity: 0.2; cursor: not-allowed; }
+
+/* Loading / empty states */
+.discover-loading, .card-loading {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 14px;
-  color: var(--text-muted);
+  color: var(--t2);
+  font-size: 14px;
 }
-
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(253,41,123,0.15);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .discover-empty {
   flex: 1;
@@ -318,25 +316,28 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   text-align: center;
-  padding: 2rem;
-  padding-bottom: calc(var(--nav-height) + 2rem);
+  padding: 32px;
+  padding-bottom: calc(var(--nav-h) + 32px);
+  color: var(--t2);
 }
-
-.empty-icon { font-size: 3.5rem; }
-.discover-empty h2 { font-size: 1.4rem; font-weight: 700; }
-.discover-empty p  { color: var(--text-muted); font-size: 14px; }
+.discover-empty h2 { font-size: 22px; font-weight: 700; color: var(--t1); margin-bottom: 4px; }
+.discover-empty p  { font-size: 14px; line-height: 1.5; }
 
 .btn-secondary {
   display: inline-block;
-  padding: 11px 24px;
-  border: 1.5px solid var(--accent);
-  color: var(--accent);
-  border-radius: var(--radius-full);
+  margin-top: 10px;
+  padding: 11px 28px;
+  border: 1.5px solid rgba(255,45,107,0.4);
+  color: var(--pink);
+  border-radius: var(--r-pill);
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;
-  transition: background 0.2s;
+  transition: background 0.2s, border-color 0.2s;
 }
-.btn-secondary:hover { background: rgba(253,41,123,0.08); }
+.btn-secondary:hover {
+  background: rgba(255,45,107,0.07);
+  border-color: var(--pink);
+}

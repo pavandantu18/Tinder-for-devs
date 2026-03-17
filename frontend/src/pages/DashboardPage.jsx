@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { getMyProfile } from '../api/user';
 import NotificationBell from '../components/NotificationBell';
 import NavBar from '../components/NavBar';
+import { LogoIcon } from '../components/Icons';
 import '../styles/dashboard.css';
 
 const DashboardPage = () => {
@@ -33,7 +34,7 @@ const DashboardPage = () => {
 
       {/* Header */}
       <header className="dashboard-header">
-        <h1 className="dashboard-logo">💻 DevMatch</h1>
+        <h1 className="dashboard-logo"><LogoIcon size={20} /> DevMatch</h1>
         <div className="dashboard-header-actions">
           <NotificationBell isLoggedIn={true} />
           <button onClick={handleLogout} className="btn-signout">
@@ -50,7 +51,7 @@ const DashboardPage = () => {
             <div className="dash-avatar">
               {profile?.photo_url
                 ? <img src={profile.photo_url} alt="" />
-                : '💻'}
+                : <span className="avatar-initial">{(profile?.name || user?.email || 'U')[0].toUpperCase()}</span>}
             </div>
             <div className="dash-user-info">
               <div className="dash-name">{profile?.name || user?.email}</div>
@@ -60,7 +61,7 @@ const DashboardPage = () => {
 
           {!loading && !profile?.is_complete && (
             <div className="dash-nudge">
-              ⚠ Complete your profile to appear in the discovery feed — add your name and at least one skill.
+              Complete your profile to appear in the discovery feed — add your name and at least one skill.
             </div>
           )}
 
@@ -79,7 +80,6 @@ const DashboardPage = () => {
 
         {/* Discover card */}
         <div className="dash-card discover-cta">
-          <div className="discover-cta-icon">🃏</div>
           <p className="discover-cta-text">
             {profile?.is_complete
               ? 'Your profile is live — start swiping on other developers!'
@@ -88,10 +88,10 @@ const DashboardPage = () => {
           {profile?.is_complete ? (
             <div className="discover-cta-buttons">
               <Link to="/discover" className="btn-swipe">
-                Start Swiping →
+                Start Swiping
               </Link>
               <Link to="/matches" className="btn-matches">
-                ❤️ Matches
+                Matches
               </Link>
             </div>
           ) : (

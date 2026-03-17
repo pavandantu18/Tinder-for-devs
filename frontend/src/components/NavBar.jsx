@@ -1,20 +1,17 @@
-// src/components/NavBar.jsx — bottom tab navigation (Tinder-style)
 import { NavLink } from 'react-router-dom';
+import { FlameIcon, HeartIcon, PersonIcon } from './Icons';
 import '../styles/navbar.css';
 
 const NavBar = () => (
   <nav className="bottom-nav">
     <NavLink to="/discover" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-      <span className="nav-icon">🔥</span>
-      <span className="nav-label">Discover</span>
+      <FlameIcon size={26} />
     </NavLink>
     <NavLink to="/matches" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-      <span className="nav-icon">❤️</span>
-      <span className="nav-label">Matches</span>
+      <HeartIcon size={24} />
     </NavLink>
     <NavLink to="/dashboard" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-      <span className="nav-icon">👤</span>
-      <span className="nav-label">Profile</span>
+      <PersonIcon size={25} />
     </NavLink>
   </nav>
 );

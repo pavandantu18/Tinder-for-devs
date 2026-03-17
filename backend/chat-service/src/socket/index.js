@@ -23,6 +23,7 @@
 
 const jwt     = require('jsonwebtoken');
 const { checkMatchExists } = require('../grpc/matchClient');
+const { getUserName }       = require('../grpc/userClient');
 const { saveMessage, getRoomMessages } = require('../services/chat.service');
 const { isValidRoom, getRecipient, publishMessageSent } = require('../config/kafka');
 
@@ -50,7 +51,9 @@ const initSocket = (io) => {
         : authHeader;
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      socket.userId = decoded.sub;  // Store userId for this connection
+      socket.userId = decoded.sub;
+      // Fetch display name async — don't block the connection if it fails
+      getUserName(decoded.sub).then((name) => { socket.userName = name || 'Someone'; }).catch(() => { socket.userName = 'Someone'; });
       next();
     } catch (err) {
       next(new Error('AUTH_INVALID'));
@@ -173,14 +176,14 @@ const initSocket = (io) => {
           publishMessageSent({
             roomId,
             senderId:    socket.userId,
+            senderName:  socket.userName || 'Someone',
             recipientId,
             sentAt:      message.sentAt,
             type:        message.type,
-            // For media messages send a label, not the full base64 blob
-            text: message.type === 'image' ? '📷 Photo'
-                : message.type === 'video' ? '🎥 Video'
-                : message.type === 'code'  ? '💻 Code snippet'
-                : message.text.slice(0, 120),   // plain text: 120-char preview
+            text: message.type === 'image' ? 'Sent a photo'
+                : message.type === 'video' ? 'Sent a video'
+                : message.type === 'code'  ? 'Sent a code snippet'
+                : message.text.slice(0, 120),
           }).catch((err) => console.warn('[Kafka] publishMessageSent failed:', err.message));
         }
 

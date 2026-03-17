@@ -13,6 +13,8 @@ import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import EmojiPicker from 'emoji-picker-react';
 import { useAuth } from '../context/AuthContext';
 import useChatSocket from '../hooks/useChatSocket';
+import { getMatch } from '../api/match';
+import { ChevronLeftIcon, EmojiIcon, AttachIcon, CodeIcon, SendIcon } from '../components/Icons';
 import '../styles/chat.css';
 
 // Max raw file size before base64 encoding (~3.5 MB → ~4.7 MB base64)
@@ -63,7 +65,15 @@ const ChatPage = () => {
   const { state }     = useLocation();
   const { user }      = useAuth();
   const navigate      = useNavigate();
-  const matchedUser   = state?.matchedUser;   // { id, name, photo_url, skills }
+
+  // matchedUser comes from router state (Matches page) or is fetched below
+  const [matchedUser, setMatchedUser] = useState(state?.matchedUser || null);
+
+  useEffect(() => {
+    if (!matchedUser && matchId) {
+      getMatch(matchId).then((m) => { if (m) setMatchedUser(m.user); }).catch(() => {});
+    }
+  }, [matchId]);
 
   const [text, setText]             = useState('');
   const [isCodeMode, setIsCodeMode] = useState(false);
@@ -143,7 +153,7 @@ const ChatPage = () => {
 
       {/* ── Header ── */}
       <div className="chat-header">
-        <button className="chat-back-btn" onClick={() => navigate('/matches')}>‹</button>
+        <button className="chat-back-btn" onClick={() => navigate('/matches')}><ChevronLeftIcon size={24}/></button>
 
         <div className="chat-peer">
           <div className="chat-peer-avatar">
@@ -208,14 +218,14 @@ const ChatPage = () => {
           className={`tool-btn ${showEmoji ? 'active' : ''}`}
           onClick={() => setShowEmoji((v) => !v)}
           title="Emoji"
-        >😊</button>
+        ><EmojiIcon size={20}/></button>
 
         {/* Photo / Video */}
         <button
           className="tool-btn"
           onClick={() => fileInputRef.current?.click()}
           title="Send photo or video"
-        >📎</button>
+        ><AttachIcon size={20}/></button>
         <input
           ref={fileInputRef}
           type="file"
@@ -229,7 +239,7 @@ const ChatPage = () => {
           className={`tool-btn ${isCodeMode ? 'active' : ''}`}
           onClick={() => setIsCodeMode((v) => !v)}
           title="Code snippet"
-        >{'</>'}</button>
+        ><CodeIcon size={20}/></button>
 
         {/* Text input */}
         <textarea
@@ -252,7 +262,7 @@ const ChatPage = () => {
           className="chat-send-btn"
           onClick={handleSend}
           disabled={!connected || !text.trim()}
-        >➤</button>
+        ><SendIcon size={18}/></button>
 
       </div>
 

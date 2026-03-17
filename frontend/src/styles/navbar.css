@@ -1,17 +1,11 @@
-/* =============================================================================
-   src/styles/navbar.css  —  Bottom tab navigation
-   ============================================================================= */
-
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;
-  background: rgba(13, 13, 13, 0.96);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  height: 60px;
+  background: #111111;
+  border-top: 1px solid rgba(255,255,255,0.06);
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -21,41 +15,17 @@
 
 .nav-item {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+  width: 56px;
+  height: 48px;
+  border-radius: 14px;
+  color: #555;
   text-decoration: none;
-  padding: 8px 24px;
-  border-radius: 12px;
-  transition: background 0.2s;
+  transition: color 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.nav-icon {
-  font-size: 1.4rem;
-  line-height: 1;
-  filter: grayscale(0.4) brightness(0.7);
-  transition: filter 0.2s, transform 0.2s;
-}
-
-.nav-label {
-  font-size: 0.65rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  letter-spacing: 0.3px;
-  transition: color 0.2s;
-}
-
-.nav-item.active .nav-icon {
-  filter: none;
-  transform: scale(1.1);
-}
-
-.nav-item.active .nav-label {
-  color: var(--accent);
-  font-weight: 600;
+.nav-item.active {
+  color: #FD297B;
 }

@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LogoIcon } from '../components/Icons';
 import '../styles/auth.css';
 
 const LoginPage = () => {
@@ -90,7 +91,7 @@ const LoginPage = () => {
 
         {/* Brand header */}
         <div className="auth-logo">
-          <span className="auth-logo-icon">💻</span>
+          <span className="auth-logo-icon"><LogoIcon size={28} /></span>
           <h1>DevMatch</h1>
           <p>Find your perfect dev partner</p>
         </div>
