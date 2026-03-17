@@ -22,6 +22,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfileEditPage from './pages/ProfileEditPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
+import DiscoverPage from './pages/DiscoverPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const App = () => {
@@ -59,6 +60,15 @@ const App = () => {
         element={
           <ProtectedRoute>
             <ProfileEditPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/discover"
+        element={
+          <ProtectedRoute>
+            <DiscoverPage />
           </ProtectedRoute>
         }
       />

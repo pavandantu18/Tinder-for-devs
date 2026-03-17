@@ -1,0 +1,340 @@
+/* =============================================================================
+   src/styles/discover.css
+   Styles for DiscoverPage — the swipe feed
+   ============================================================================= */
+
+/* ---------------------------------------------------------------------------
+   Page layout
+   --------------------------------------------------------------------------- */
+.discover-page {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 1rem 2rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Header
+   --------------------------------------------------------------------------- */
+.discover-header {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+}
+
+.discover-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0;
+}
+
+.back-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: var(--text-primary);
+}
+
+.discover-count {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.discover-error {
+  color: var(--error);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Card stack container
+   --------------------------------------------------------------------------- */
+.card-stack {
+  width: 100%;
+  max-width: 420px;
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 0.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Swipe card
+   --------------------------------------------------------------------------- */
+.swipe-card {
+  width: 100%;
+  background: var(--bg-card);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* LIKE animation — slide right + green tint */
+.swipe-card.swiping-like {
+  transform: translateX(60px) rotate(5deg);
+  opacity: 0.7;
+}
+
+/* PASS animation — slide left + red tint */
+.swipe-card.swiping-pass {
+  transform: translateX(-60px) rotate(-5deg);
+  opacity: 0.7;
+}
+
+/* ---------------------------------------------------------------------------
+   Card photo section
+   --------------------------------------------------------------------------- */
+.card-photo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+}
+
+/* Swipe indicators overlaid on the photo */
+.swipe-indicator {
+  position: absolute;
+  top: 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  border: 3px solid;
+  text-transform: uppercase;
+}
+
+.like-indicator {
+  left: 1.5rem;
+  color: #22c55e;
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.pass-indicator {
+  right: 1.5rem;
+  color: #ef4444;
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* ---------------------------------------------------------------------------
+   Card info section
+   --------------------------------------------------------------------------- */
+.card-info {
+  padding: 1.25rem 1.5rem 0.5rem;
+}
+
+.card-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.card-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.card-age {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.card-location {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem;
+}
+
+.card-bio {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.card-skills .skill-tag {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.card-github {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: var(--accent);
+  text-decoration: none;
+  margin-bottom: 0.25rem;
+}
+
+.card-github:hover {
+  text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------------------
+   Action buttons
+   --------------------------------------------------------------------------- */
+.card-actions {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.btn-pass,
+.btn-like {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-pass {
+  background: rgba(239, 68, 68, 0.15);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.btn-pass:hover:not(:disabled) {
+  transform: scale(1.1);
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.btn-like {
+  background: rgba(34, 197, 94, 0.15);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+}
+
+.btn-like:hover:not(:disabled) {
+  transform: scale(1.1);
+  background: rgba(34, 197, 94, 0.25);
+}
+
+.btn-pass:disabled,
+.btn-like:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------------------
+   Loading and empty states
+   --------------------------------------------------------------------------- */
+.discover-loading,
+.card-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+  color: var(--text-secondary);
+  gap: 1rem;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(99, 102, 241, 0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.discover-empty {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-primary);
+}
+
+.empty-icon {
+  font-size: 4rem;
+}
+
+.discover-empty h2 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.discover-empty p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.btn-secondary {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(99, 102, 241, 0.1);
+}

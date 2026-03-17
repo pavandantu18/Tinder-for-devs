@@ -133,12 +133,11 @@ const userServiceProxy = createServiceProxy(
 );
 
 // Swipe Service — handles /api/swipes/* (LIKE/PASS actions)
-// Uncomment in Step 5
-// const swipeServiceProxy = createServiceProxy(
-//   process.env.SWIPE_SERVICE_URL || 'http://swipe-service:3003',
-//   'swipe-service',
-//   '/api/swipes'
-// );
+const swipeServiceProxy = createServiceProxy(
+  process.env.SWIPE_SERVICE_URL || 'http://swipe-service:3003',
+  'swipe-service',
+  '/api/swipes'
+);
 
 // Match Service — handles /api/matches/* (match list, match detail)
 // Uncomment in Step 6
@@ -167,7 +166,7 @@ const userServiceProxy = createServiceProxy(
 module.exports = {
   authServiceProxy,
   userServiceProxy,
-  // swipeServiceProxy,        // Step 5
+  swipeServiceProxy,
   // matchServiceProxy,        // Step 6
   // chatServiceProxy,         // Step 7
   // notificationServiceProxy, // Step 8

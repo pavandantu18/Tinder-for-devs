@@ -84,10 +84,23 @@ const DashboardPage = () => {
         </Link>
       </div>
 
-      {/* Discover placeholder */}
-      <div style={{ width: '100%', maxWidth: 560, background: '#1a1a1a', border: '1px dashed #2a2a2a', borderRadius: 12, padding: 28, textAlign: 'center', color: '#555' }}>
+      {/* Discover / swipe feed */}
+      <div style={{ width: '100%', maxWidth: 560, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 12, padding: 28, textAlign: 'center' }}>
         <div style={{ fontSize: 36, marginBottom: 8 }}>🃏</div>
-        <div style={{ fontSize: 14 }}>Swipe interface — coming in Step 5 (Swipe Service)</div>
+        <div style={{ fontSize: 15, color: '#ccc', marginBottom: 16 }}>
+          {profile?.is_complete
+            ? 'Your profile is live — start swiping on other developers!'
+            : 'Complete your profile first to unlock the swipe feed.'}
+        </div>
+        {profile?.is_complete ? (
+          <Link to="/discover" style={{ display: 'inline-block', background: '#fd5564', color: '#fff', borderRadius: 8, padding: '11px 32px', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+            Start Swiping →
+          </Link>
+        ) : (
+          <Link to="/profile/edit" style={{ display: 'inline-block', border: '1px solid #fd5564', color: '#fd5564', borderRadius: 8, padding: '11px 32px', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+            Complete Profile →
+          </Link>
+        )}
       </div>
 
     </div>

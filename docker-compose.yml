@@ -599,6 +599,8 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_started   # Gateway just needs auth-service to exist, not be healthy
+      swipe-service:
+        condition: service_started   # Proxy routes need swipe-service to exist
     ports:
       - "3000:3000"
     environment:
@@ -616,7 +618,7 @@ services:
       # Downstream service URLs (Docker container names as hostnames)
       AUTH_SERVICE_URL: http://auth-service:3001
       USER_SERVICE_URL: http://user-service:3002
-      # SWIPE_SERVICE_URL: http://swipe-service:3003     # Step 5
+      SWIPE_SERVICE_URL: http://swipe-service:3003
       # MATCH_SERVICE_URL: http://match-service:3004     # Step 6
       # CHAT_SERVICE_URL: http://chat-service:3005       # Step 7
       # NOTIFICATION_SERVICE_URL: http://notification-service:3006  # Step 8
@@ -662,14 +664,55 @@ services:
       KAFKA_BROKER: ${KAFKA_BROKER}
 
       GRPC_USER_SERVICE_PORT: 50052
+
+      # gRPC client — calls Swipe Service to filter /discover feed
+      SWIPE_GRPC_HOST: swipe-service:50053
+    restart: unless-stopped
+
+
+  # ===========================================================================
+  # SWIPE SERVICE (Step 5)
+  #
+  # Records LIKE / PASS swipe actions.
+  # Emits swipe.created Kafka events → Match Service consumes.
+  # Exposes gRPC server (port 50053) for:
+  #   - User Service: GetSwipedUserIds (filter /discover feed)
+  #   - Match Service: CheckMutualLike (detect mutual matches)
+  # ===========================================================================
+  swipe-service:
+    build:
+      context: .                                    # project root — gives access to proto/
+      dockerfile: ./backend/swipe-service/Dockerfile
+    container_name: devmatch-swipe-service
+    networks:
+      - devmatch-network
+    depends_on:
+      postgres-swipe:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "3003:3003"     # HTTP API
+      - "50053:50053"   # gRPC server (used by User Service + Match Service)
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: 3003
+
+      POSTGRES_SWIPE_HOST: postgres-swipe
+      POSTGRES_SWIPE_PORT: 5432
+      POSTGRES_SWIPE_DB: swipe_db
+      POSTGRES_SWIPE_USER: ${POSTGRES_SWIPE_USER}
+      POSTGRES_SWIPE_PASSWORD: ${POSTGRES_SWIPE_PASSWORD}
+
+      KAFKA_BROKER: ${KAFKA_BROKER}
+
+      GRPC_PORT: 50053
     restart: unless-stopped
 
 
   # ===========================================================================
   # APPLICATION SERVICES — COMING IN LATER STEPS
   #
-  #   Step 5  → swipe-service        (port 3003)
-  #   Step 5  → swipe-service        (port 3003)
   #   Step 6  → match-service        (port 3004)
   #   Step 7  → chat-service         (port 3005)
   #   Step 8  → notification-service (port 3006)

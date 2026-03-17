@@ -15,6 +15,7 @@
 // =============================================================================
 
 const { query } = require('../config/db');
+const { getSwipedUserIds } = require('../grpc/swipeClient');
 
 // ---------------------------------------------------------------------------
 // createBlankProfile(userId, email)
@@ -145,10 +146,10 @@ const updateMyProfile = async (userId, fields) => {
 // discoverProfiles(userId, page, limit)
 //
 // Returns a paginated list of complete profiles for the swipe feed.
-// Excludes the current user's own profile.
-//
-// In Step 5 (Swipe Service), this will be enhanced to also exclude
-// profiles the user has already swiped on.
+// Excludes:
+//   1. The current user's own profile
+//   2. Profiles the user has already swiped on (LIKE or PASS)
+//      → fetched from Swipe Service via gRPC (GetSwipedUserIds)
 //
 // PARAMS:
 //   userId (string) — current user's UUID (excluded from results)
@@ -164,11 +165,19 @@ const discoverProfiles = async (userId, page = 1, limit = 10) => {
   const safeLimit = Math.min(20, Math.max(1, parseInt(limit)));
   const offset    = (safePage - 1) * safeLimit;
 
+  // Fetch IDs the user has already swiped on from Swipe Service via gRPC.
+  // Returns [] if Swipe Service is unavailable (non-fatal degraded mode).
+  const swipedIds = await getSwipedUserIds(userId);
+
+  // Build exclusion list: always exclude self + already-swiped profiles
+  // We pass these as a PostgreSQL array so we can use ANY($2)
+  const excludeIds = [userId, ...swipedIds];
+
   // Get total count for pagination metadata
   const countResult = await query(
     `SELECT COUNT(*) FROM profiles
-     WHERE id != $1 AND is_complete = true`,
-    [userId]
+     WHERE id != ALL($1::uuid[]) AND is_complete = true`,
+    [excludeIds]
   );
   const total = parseInt(countResult.rows[0].count);
 
@@ -176,11 +185,11 @@ const discoverProfiles = async (userId, page = 1, limit = 10) => {
   const result = await query(
     `SELECT id, name, bio, skills, github_url, photo_url, age, location
      FROM profiles
-     WHERE id != $1
+     WHERE id != ALL($1::uuid[])
        AND is_complete = true
      ORDER BY created_at DESC
      LIMIT $2 OFFSET $3`,
-    [userId, safeLimit, offset]
+    [excludeIds, safeLimit, offset]
   );
 
   return {
