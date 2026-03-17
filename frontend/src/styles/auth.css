@@ -1,36 +1,43 @@
 /* =============================================================================
-   src/styles/auth.css
-   Project: DevMatch Frontend
-
-   PURPOSE:
-     Styles for the Login and Register pages.
-     Both pages share the same layout: full-screen centered card.
+   Auth pages — Login & Register
    ============================================================================= */
 
-/* Full-screen container — centers the card both vertically and horizontally */
 .auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-
-  /* Subtle gradient background — dark with a faint red hint at the top */
-  background: radial-gradient(ellipse at top, #2a0a0e 0%, #0f0f0f 60%);
+  padding: 20px 16px;
+  background: var(--bg-primary);
+  position: relative;
+  overflow: hidden;
 }
 
-/* The card that contains the form */
+/* Background glow */
+.auth-page::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(253,41,123,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
 .auth-card {
   width: 100%;
-  max-width: 420px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  padding: 40px 36px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  max-width: 400px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-2xl);
+  padding: 40px 28px 36px;
+  position: relative;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.5);
 }
 
-/* Logo / brand section at the top of the card */
+/* Logo */
 .auth-logo {
   text-align: center;
   margin-bottom: 32px;
@@ -39,30 +46,32 @@
 .auth-logo-icon {
   font-size: 48px;
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .auth-logo h1 {
   font-size: 28px;
-  font-weight: 700;
-  color: var(--color-primary);
+  font-weight: 900;
   letter-spacing: -0.5px;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .auth-logo p {
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   font-size: 14px;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
-/* Form elements */
+/* Form */
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 16px; /* Space between each form field */
+  gap: 12px;
 }
 
-/* Label + input grouped together */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -70,100 +79,107 @@
 }
 
 .form-group label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
 .form-group input {
-  background-color: #111111;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 12px 14px;
-  color: var(--color-text);
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  color: var(--text-primary);
   font-size: 15px;
-  transition: border-color var(--transition), box-shadow var(--transition);
   outline: none;
   width: 100%;
+  transition: border-color 0.2s, background 0.2s;
+  font-family: inherit;
+  -webkit-appearance: none;
 }
 
 .form-group input::placeholder {
-  color: #555555;
+  color: var(--text-muted);
 }
 
-/* Highlight the active input with the primary colour */
 .form-group input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(253, 85, 100, 0.15);
+  border-color: var(--brand-from);
+  background: rgba(253,41,123,0.04);
+  box-shadow: 0 0 0 3px rgba(253,41,123,0.1);
 }
 
-/* Input in error state */
 .form-group input.input-error {
-  border-color: var(--color-error);
+  border-color: var(--error);
 }
 
-/* Primary action button */
+/* Primary button */
 .btn-primary {
-  background-color: var(--color-primary);
-  color: white;
+  background: var(--brand-gradient);
+  color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 13px;
-  font-size: 15px;
-  font-weight: 600;
+  border-radius: var(--radius-full);
+  padding: 15px;
+  font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background-color var(--transition), transform var(--transition);
   width: 100%;
-  margin-top: 4px;
+  margin-top: 8px;
+  box-shadow: var(--shadow-button);
+  transition: opacity 0.2s, transform 0.15s;
+  -webkit-appearance: none;
+  letter-spacing: 0.2px;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .btn-primary:active:not(:disabled) {
   transform: scale(0.98);
+  opacity: 1;
 }
 
-/* Disabled state — shown while the form is submitting */
 .btn-primary:disabled {
-  opacity: 0.6;
+  opacity: 0.45;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-/* Google OAuth button */
+/* Google button */
 .btn-google {
-  background-color: transparent;
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 12px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-primary);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-full);
+  padding: 14px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color var(--transition), border-color var(--transition);
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: inherit;
 }
 
 .btn-google:hover {
-  background-color: var(--color-surface-hover);
-  border-color: #444444;
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.18);
 }
 
-/* Divider between form and Google button */
+/* Divider */
 .auth-divider {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--color-text-muted);
-  font-size: 13px;
-  margin: 4px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  margin: 8px 0;
 }
 
 .auth-divider::before,
@@ -171,44 +187,45 @@
   content: '';
   flex: 1;
   height: 1px;
-  background-color: var(--color-border);
+  background: rgba(255,255,255,0.07);
 }
 
-/* Error message shown below the form */
+/* Messages */
 .auth-error {
-  background-color: rgba(255, 68, 68, 0.1);
-  border: 1px solid rgba(255, 68, 68, 0.3);
-  border-radius: 8px;
-  padding: 10px 14px;
-  color: var(--color-error);
+  background: rgba(255,69,58,0.12);
+  border: 1px solid rgba(255,69,58,0.2);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  color: #FF6B6B;
   font-size: 13px;
   text-align: center;
+  line-height: 1.4;
 }
 
-/* Success message */
 .auth-success {
-  background-color: rgba(68, 187, 68, 0.1);
-  border: 1px solid rgba(68, 187, 68, 0.3);
-  border-radius: 8px;
-  padding: 10px 14px;
-  color: var(--color-success);
+  background: rgba(48,209,88,0.1);
+  border: 1px solid rgba(48,209,88,0.2);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  color: #4ADE80;
   font-size: 13px;
   text-align: center;
 }
 
-/* "Already have an account? Login" link at the bottom */
+/* Footer */
 .auth-footer {
   text-align: center;
   margin-top: 24px;
   font-size: 14px;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 .auth-footer a {
-  color: var(--color-primary);
-  font-weight: 500;
+  color: var(--brand-from);
+  font-weight: 600;
+  text-decoration: none;
 }
 
 .auth-footer a:hover {
-  opacity: 0.8;
+  text-decoration: underline;
 }

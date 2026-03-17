@@ -167,12 +167,25 @@ const chatServiceProxy = createProxyMiddleware({
 });
 
 // Notification Service — handles /api/notifications/*
-// Uncomment in Step 8
-// const notificationServiceProxy = createServiceProxy(
-//   process.env.NOTIFICATION_SERVICE_URL || 'http://notification-service:3006',
-//   'notification-service',
-//   '/api/notifications'
-// );
+// SSE stream (/api/notifications/stream) needs proxy buffering disabled
+const notificationServiceProxy = createProxyMiddleware({
+  target: process.env.NOTIFICATION_SERVICE_URL || 'http://notification-service:3006',
+  pathFilter: '/api/notifications',
+  changeOrigin: true,
+  on: {
+    proxyReq: (proxyReq, req) => {
+      proxyReq.setHeader('X-Gateway-Request', 'true');
+      // Disable buffering for SSE — data must flow immediately
+      if (req.path.includes('/stream')) {
+        proxyReq.setHeader('X-Accel-Buffering', 'no');
+      }
+    },
+    error: (err, req, res) => {
+      console.error('[Proxy] Error routing to notification-service:', err.message);
+      if (!res.headersSent) res.status(503).json({ error: 'notification-service is temporarily unavailable.' });
+    },
+  },
+});
 
 module.exports = {
   authServiceProxy,
@@ -180,6 +193,7 @@ module.exports = {
   swipeServiceProxy,
   matchServiceProxy,
   chatServiceProxy,
+  notificationServiceProxy,
   // chatServiceProxy,         // Step 7
   // notificationServiceProxy, // Step 8
 };

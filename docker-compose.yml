@@ -81,12 +81,13 @@ networks:
 #   - Only `docker-compose down -v` deletes volumes (use when you want a fresh DB)
 # =============================================================================
 volumes:
-  postgres-auth-data:   # Stores auth_db tables (users: id, email, password_hash)
-  postgres-user-data:   # Stores user_db tables (profiles: bio, skills, photo_url)
-  postgres-swipe-data:  # Stores swipe_db tables (swipes: swiper_id, target_id, direction)
-  postgres-match-data:  # Stores match_db tables (matches: id, user1_id, user2_id)
-  mongo-chat-data:      # Stores chat messages as MongoDB documents
-  redis-data:           # Stores Redis AOF log (rate limit counters, JWT blacklist)
+  postgres-auth-data:         # Stores auth_db tables (users: id, email, password_hash)
+  postgres-user-data:         # Stores user_db tables (profiles: bio, skills, photo_url)
+  postgres-swipe-data:        # Stores swipe_db tables (swipes: swiper_id, target_id, direction)
+  postgres-match-data:        # Stores match_db tables (matches: id, user1_id, user2_id)
+  postgres-notification-data: # Stores notification_db tables
+  mongo-chat-data:            # Stores chat messages as MongoDB documents
+  redis-data:                 # Stores Redis AOF log (rate limit counters, JWT blacklist)
 
 
 services:
@@ -625,6 +626,7 @@ services:
       SWIPE_SERVICE_URL: http://swipe-service:3003
       MATCH_SERVICE_URL: http://match-service:3004
       CHAT_SERVICE_URL: http://chat-service:3005
+      NOTIFICATION_SERVICE_URL: http://notification-service:3006
       # MATCH_SERVICE_URL: http://match-service:3004     # Step 6
       # CHAT_SERVICE_URL: http://chat-service:3005       # Step 7
       # NOTIFICATION_SERVICE_URL: http://notification-service:3006  # Step 8
@@ -812,7 +814,58 @@ services:
 
 
   # ===========================================================================
-  # APPLICATION SERVICES — COMING IN LATER STEPS
-  #
-  #   Step 8  → notification-service (port 3006)
+  # POSTGRES — NOTIFICATION SERVICE
   # ===========================================================================
+  postgres-notification:
+    image: postgres:16-alpine
+    container_name: devmatch-postgres-notification
+    networks:
+      - devmatch-network
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: ${POSTGRES_NOTIFICATION_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_NOTIFICATION_PASSWORD}
+    volumes:
+      - postgres-notification-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_NOTIFICATION_USER} -d notification_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  # ===========================================================================
+  # NOTIFICATION SERVICE (Step 8)
+  #
+  # Consumes match.created → notifies both matched users.
+  # Consumes message.sent  → notifies message recipient.
+  # Delivers real-time in-app notifications via SSE (Server-Sent Events).
+  # Stores notification history in PostgreSQL.
+  # ===========================================================================
+  notification-service:
+    build: ./backend/notification-service
+    container_name: devmatch-notification-service
+    networks:
+      - devmatch-network
+    depends_on:
+      postgres-notification:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "3006:3006"
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: 3006
+
+      POSTGRES_NOTIFICATION_HOST: postgres-notification
+      POSTGRES_NOTIFICATION_PORT: 5432
+      POSTGRES_NOTIFICATION_DB: notification_db
+      POSTGRES_NOTIFICATION_USER: ${POSTGRES_NOTIFICATION_USER}
+      POSTGRES_NOTIFICATION_PASSWORD: ${POSTGRES_NOTIFICATION_PASSWORD}
+
+      KAFKA_BROKER: ${KAFKA_BROKER}
+      JWT_SECRET: ${JWT_SECRET}
+    restart: unless-stopped

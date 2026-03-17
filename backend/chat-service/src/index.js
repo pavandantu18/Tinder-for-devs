@@ -21,7 +21,7 @@ const { Server } = require('socket.io');
 
 const { app, corsOptions } = require('./app');
 const { connectMongo, disconnectMongo } = require('./config/db');
-const { startConsumer, disconnectConsumer } = require('./config/kafka');
+const { connectProducer, disconnectProducer, startConsumer, disconnectConsumer } = require('./config/kafka');
 const { initSocket } = require('./socket');
 
 const PORT = process.env.PORT || 3005;
@@ -31,7 +31,8 @@ const start = async () => {
     // 1. MongoDB
     await connectMongo();
 
-    // 2. Kafka consumer — build valid rooms cache from match.created events
+    // 2. Kafka producer (emits message.sent) + consumer (match.created cache)
+    await connectProducer();
     await startConsumer();
 
     // 3. Create HTTP server from Express app
@@ -58,6 +59,7 @@ const start = async () => {
     const shutdown = async (signal) => {
       console.log(`[Shutdown] ${signal} received`);
       await disconnectConsumer();
+      await disconnectProducer();
       await disconnectMongo();
       httpServer.close(() => {
         console.log('[Shutdown] HTTP server closed');

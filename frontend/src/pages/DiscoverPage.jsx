@@ -25,6 +25,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { discoverProfiles } from '../api/user';
 import { recordSwipe } from '../api/swipe';
+import NavBar from '../components/NavBar';
 import '../styles/discover.css';
 
 const DiscoverPage = () => {
@@ -125,7 +126,6 @@ const DiscoverPage = () => {
     <div className="discover-page">
       {/* Header */}
       <div className="discover-header">
-        <Link to="/dashboard" className="back-link">← Dashboard</Link>
         <h1 className="discover-title">DevMatch</h1>
         <span className="discover-count">
           {profiles.length - currentIndex} left
@@ -140,7 +140,7 @@ const DiscoverPage = () => {
           <div
             className={`swipe-card ${swiping === 'like' ? 'swiping-like' : ''} ${swiping === 'pass' ? 'swiping-pass' : ''}`}
           >
-            {/* Profile photo or placeholder */}
+            {/* Profile photo — name/info overlaid at bottom (Tinder style) */}
             <div className="card-photo">
               {currentProfile.photo_url ? (
                 <img src={currentProfile.photo_url} alt={currentProfile.name} />
@@ -150,52 +150,53 @@ const DiscoverPage = () => {
                 </div>
               )}
 
-              {/* Swipe indicator overlays */}
+              {/* Gradient overlay for readability */}
+              <div className="card-photo-overlay" />
+
+              {/* Swipe indicators */}
               {swiping === 'like' && (
                 <div className="swipe-indicator like-indicator">LIKE ❤️</div>
               )}
               {swiping === 'pass' && (
-                <div className="swipe-indicator pass-indicator">PASS 👎</div>
+                <div className="swipe-indicator pass-indicator">NOPE 👎</div>
               )}
-            </div>
 
-            {/* Profile info */}
-            <div className="card-info">
-              <div className="card-name-row">
-                <h2 className="card-name">{currentProfile.name}</h2>
-                {currentProfile.age && (
-                  <span className="card-age">{currentProfile.age}</span>
+              {/* Profile info overlaid on photo */}
+              <div className="card-overlay-info">
+                <div className="card-name-row">
+                  <h2 className="card-name">{currentProfile.name}</h2>
+                  {currentProfile.age && (
+                    <span className="card-age">{currentProfile.age}</span>
+                  )}
+                </div>
+
+                {currentProfile.location && (
+                  <p className="card-location">📍 {currentProfile.location}</p>
+                )}
+
+                {currentProfile.bio && (
+                  <p className="card-bio">{currentProfile.bio}</p>
+                )}
+
+                {currentProfile.skills?.length > 0 && (
+                  <div className="card-skills">
+                    {currentProfile.skills.map((skill) => (
+                      <span key={skill} className="skill-tag">{skill}</span>
+                    ))}
+                  </div>
+                )}
+
+                {currentProfile.github_url && (
+                  <a
+                    href={currentProfile.github_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="card-github"
+                  >
+                    GitHub →
+                  </a>
                 )}
               </div>
-
-              {currentProfile.location && (
-                <p className="card-location">📍 {currentProfile.location}</p>
-              )}
-
-              {currentProfile.bio && (
-                <p className="card-bio">{currentProfile.bio}</p>
-              )}
-
-              {/* Skills */}
-              {currentProfile.skills?.length > 0 && (
-                <div className="card-skills">
-                  {currentProfile.skills.map((skill) => (
-                    <span key={skill} className="skill-tag">{skill}</span>
-                  ))}
-                </div>
-              )}
-
-              {/* GitHub link */}
-              {currentProfile.github_url && (
-                <a
-                  href={currentProfile.github_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="card-github"
-                >
-                  GitHub →
-                </a>
-              )}
             </div>
 
             {/* Action buttons */}
@@ -226,6 +227,7 @@ const DiscoverPage = () => {
           </div>
         )}
       </div>
+      <NavBar />
     </div>
   );
 };

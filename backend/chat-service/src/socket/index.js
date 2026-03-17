@@ -24,7 +24,7 @@
 const jwt     = require('jsonwebtoken');
 const { checkMatchExists } = require('../grpc/matchClient');
 const { saveMessage, getRoomMessages } = require('../services/chat.service');
-const { isValidRoom } = require('../config/kafka');
+const { isValidRoom, getRecipient, publishMessageSent } = require('../config/kafka');
 
 // ---------------------------------------------------------------------------
 // initSocket(io)
@@ -166,6 +166,23 @@ const initSocket = (io) => {
           text:     message.text,
           sentAt:   message.sentAt,
         });
+
+        // Emit message.sent to Kafka so Notification Service can notify the recipient
+        const recipientId = getRecipient(roomId, socket.userId);
+        if (recipientId) {
+          publishMessageSent({
+            roomId,
+            senderId:    socket.userId,
+            recipientId,
+            sentAt:      message.sentAt,
+            type:        message.type,
+            // For media messages send a label, not the full base64 blob
+            text: message.type === 'image' ? '📷 Photo'
+                : message.type === 'video' ? '🎥 Video'
+                : message.type === 'code'  ? '💻 Code snippet'
+                : message.text.slice(0, 120),   // plain text: 120-char preview
+          }).catch((err) => console.warn('[Kafka] publishMessageSent failed:', err.message));
+        }
 
       } catch (err) {
         console.error('[Socket.IO] sendMessage error:', err.message);

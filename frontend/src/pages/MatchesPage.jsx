@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getMatches } from '../api/match';
+import NavBar from '../components/NavBar';
 import '../styles/matches.css';
 
 const MatchesPage = () => {
@@ -36,8 +37,7 @@ const MatchesPage = () => {
   return (
     <div className="matches-page">
       <div className="matches-header">
-        <Link to="/dashboard" className="back-link">← Dashboard</Link>
-        <h1>Your Matches</h1>
+        <h1>Matches</h1>
         <span className="match-count">{matches.length} match{matches.length !== 1 ? 'es' : ''}</span>
       </div>
 
@@ -96,6 +96,7 @@ const MatchesPage = () => {
           ))}
         </div>
       )}
+      <NavBar />
     </div>
   );
 };

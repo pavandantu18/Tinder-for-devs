@@ -9,7 +9,7 @@
 // =============================================================================
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Link, useParams, useLocation } from 'react-router-dom';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import EmojiPicker from 'emoji-picker-react';
 import { useAuth } from '../context/AuthContext';
 import useChatSocket from '../hooks/useChatSocket';
@@ -62,6 +62,7 @@ const ChatPage = () => {
   const { matchId }   = useParams();
   const { state }     = useLocation();
   const { user }      = useAuth();
+  const navigate      = useNavigate();
   const matchedUser   = state?.matchedUser;   // { id, name, photo_url, skills }
 
   const [text, setText]             = useState('');
@@ -142,7 +143,7 @@ const ChatPage = () => {
 
       {/* ── Header ── */}
       <div className="chat-header">
-        <Link to="/matches" className="back-link">←</Link>
+        <button className="chat-back-btn" onClick={() => navigate('/matches')}>‹</button>
 
         <div className="chat-peer">
           <div className="chat-peer-avatar">

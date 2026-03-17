@@ -86,6 +86,10 @@ const authenticate = async (req, res, next) => {
   // Skip auth for Socket.IO — chat-service verifies JWT on the handshake
   if (req.path.startsWith(SOCKET_IO_PREFIX)) return next();
 
+  // SSE stream — EventSource API cannot set custom headers, so the JWT is
+  // passed as a query param (?token=...) and verified by notification-service itself
+  if (req.path === '/api/notifications/stream') return next();
+
   // Extract token from "Authorization: Bearer <token>"
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];

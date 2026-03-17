@@ -1,88 +1,87 @@
 /* =============================================================================
-   src/styles/profile.css
-   Project: DevMatch Frontend
-
-   PURPOSE:
-     Styles for the Profile Edit page and Dashboard.
+   Profile edit page
    ============================================================================= */
 
-/* ── Page layout ── */
 .profile-page {
   min-height: 100vh;
-  background: radial-gradient(ellipse at top, #1a0a2e 0%, #0f0f0f 60%);
-  padding: 32px 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  padding-bottom: calc(var(--nav-height) + 20px);
+  background: var(--bg-primary);
 }
 
-/* ── Top nav bar ── */
 .profile-nav {
-  width: 100%;
-  max-width: 600px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
+  padding: 16px 20px 12px;
+  position: sticky;
+  top: 0;
+  background: rgba(13,13,13,0.92);
+  backdrop-filter: blur(16px);
+  z-index: 10;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
 .profile-nav h2 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .btn-ghost {
   background: transparent;
-  border: 1px solid var(--color-border, #2a2a2a);
-  border-radius: 8px;
-  color: #888;
-  padding: 8px 16px;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  padding: 7px 16px;
   font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color 0.2s, color 0.2s;
   text-decoration: none;
+  display: inline-block;
+  font-family: inherit;
 }
-
 .btn-ghost:hover {
-  border-color: #fd5564;
-  color: #fd5564;
+  border-color: rgba(253,41,123,0.4);
+  color: var(--accent);
 }
 
-/* ── Card ── */
 .profile-card {
-  width: 100%;
-  max-width: 600px;
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
-  padding: 32px;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  margin: 16px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  max-width: 544px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* ── Avatar placeholder ── */
 .avatar-section {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 28px;
-  padding-bottom: 28px;
-  border-bottom: 1px solid #2a2a2a;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
 .avatar {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  background: #2a2a2a;
+  background: var(--brand-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 28px;
   overflow: hidden;
   flex-shrink: 0;
+  border: 2px solid rgba(253,41,123,0.35);
 }
-
 .avatar img {
   width: 100%;
   height: 100%;
@@ -90,22 +89,20 @@
 }
 
 .avatar-info h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
-
 .avatar-info p {
   font-size: 13px;
-  color: #888;
+  color: var(--text-muted);
 }
 
-/* ── Form ── */
 .profile-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 .form-group {
@@ -115,70 +112,65 @@
 }
 
 .form-group label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: #888;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.7px;
 }
 
 .form-group input,
 .form-group textarea {
-  background: #111;
-  border: 1px solid #2a2a2a;
-  border-radius: 8px;
-  padding: 11px 14px;
-  color: #fff;
-  font-size: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  color: var(--text-primary);
+  font-size: 15px;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, background 0.2s;
   width: 100%;
   font-family: inherit;
   resize: vertical;
+  -webkit-appearance: none;
 }
-
 .form-group input:focus,
 .form-group textarea:focus {
-  border-color: #fd5564;
-  box-shadow: 0 0 0 3px rgba(253,85,100,0.12);
+  border-color: var(--brand-from);
+  background: rgba(253,41,123,0.03);
+  box-shadow: 0 0 0 3px rgba(253,41,123,0.08);
 }
-
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-  color: #444;
+  color: var(--text-muted);
 }
 
 .char-count {
   font-size: 11px;
-  color: #555;
+  color: var(--text-muted);
   text-align: right;
 }
 
-/* ── Skills input ── */
 .skills-input-row {
   display: flex;
   gap: 8px;
 }
-
-.skills-input-row input {
-  flex: 1;
-}
+.skills-input-row input { flex: 1; }
 
 .btn-add-skill {
-  background: #fd5564;
-  color: white;
+  background: var(--brand-gradient);
+  color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0 16px;
   font-size: 20px;
   cursor: pointer;
-  transition: background 0.2s;
   flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(253,41,123,0.3);
+  transition: opacity 0.2s;
+  line-height: 1;
 }
-
-.btn-add-skill:hover {
-  background: #e04454;
-}
+.btn-add-skill:hover { opacity: 0.88; }
 
 .skills-tags {
   display: flex;
@@ -188,74 +180,87 @@
 }
 
 .skill-tag {
-  background: rgba(253,85,100,0.12);
-  border: 1px solid rgba(253,85,100,0.3);
-  border-radius: 20px;
-  padding: 4px 10px;
+  background: rgba(253,41,123,0.1);
+  border: 1px solid rgba(253,41,123,0.22);
+  border-radius: var(--radius-full);
+  padding: 5px 12px;
   font-size: 13px;
-  color: #fd5564;
+  color: var(--accent);
   display: flex;
   align-items: center;
   gap: 6px;
+  font-weight: 500;
 }
-
 .skill-tag button {
   background: none;
   border: none;
-  color: #fd5564;
+  color: var(--accent);
   cursor: pointer;
   padding: 0;
   font-size: 14px;
   line-height: 1;
-  opacity: 0.7;
+  opacity: 0.55;
+  transition: opacity 0.15s;
 }
-
 .skill-tag button:hover { opacity: 1; }
 
-/* ── Save button ── */
 .btn-save {
-  background: #fd5564;
-  color: white;
+  background: var(--brand-gradient);
+  color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 13px;
-  font-size: 15px;
-  font-weight: 600;
+  border-radius: var(--radius-full);
+  padding: 15px;
+  font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
   width: 100%;
   margin-top: 8px;
+  box-shadow: var(--shadow-button);
+  transition: opacity 0.2s, transform 0.15s;
+  font-family: inherit;
+}
+.btn-save:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.btn-save:active:not(:disabled) { transform: scale(0.98); }
+.btn-save:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+.profile-error {
+  background: rgba(255,69,58,0.1);
+  border: 1px solid rgba(255,69,58,0.2);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: #FF6B6B;
+  font-size: 13px;
+}
+.profile-success {
+  background: rgba(48,209,88,0.1);
+  border: 1px solid rgba(48,209,88,0.2);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: #4ADE80;
+  font-size: 13px;
 }
 
-.btn-save:hover:not(:disabled) { background: #e04454; }
-.btn-save:active:not(:disabled) { transform: scale(0.98); }
-.btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
-
-/* ── Status messages ── */
-.profile-error   { background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3); border-radius: 8px; padding: 10px 14px; color: #ff4444; font-size: 13px; }
-.profile-success { background: rgba(68,187,68,0.1);  border: 1px solid rgba(68,187,68,0.3);  border-radius: 8px; padding: 10px 14px; color: #44bb44; font-size: 13px; }
-
-/* ── Completion badge ── */
 .complete-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(68,187,68,0.12);
-  border: 1px solid rgba(68,187,68,0.3);
-  border-radius: 20px;
+  background: rgba(48,209,88,0.1);
+  border: 1px solid rgba(48,209,88,0.2);
+  border-radius: var(--radius-full);
   padding: 3px 10px;
   font-size: 12px;
-  color: #44bb44;
+  color: #4ADE80;
+  font-weight: 500;
 }
-
 .incomplete-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(255,170,0,0.12);
-  border: 1px solid rgba(255,170,0,0.3);
-  border-radius: 20px;
+  background: rgba(255,195,0,0.1);
+  border: 1px solid rgba(255,195,0,0.2);
+  border-radius: var(--radius-full);
   padding: 3px 10px;
   font-size: 12px;
-  color: #ffaa00;
+  color: #FBBF24;
+  font-weight: 500;
 }
