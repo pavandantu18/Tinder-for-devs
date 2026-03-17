@@ -1,0 +1,214 @@
+/* =============================================================================
+   src/styles/auth.css
+   Project: DevMatch Frontend
+
+   PURPOSE:
+     Styles for the Login and Register pages.
+     Both pages share the same layout: full-screen centered card.
+   ============================================================================= */
+
+/* Full-screen container — centers the card both vertically and horizontally */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+
+  /* Subtle gradient background — dark with a faint red hint at the top */
+  background: radial-gradient(ellipse at top, #2a0a0e 0%, #0f0f0f 60%);
+}
+
+/* The card that contains the form */
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 40px 36px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+}
+
+/* Logo / brand section at the top of the card */
+.auth-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.auth-logo-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.auth-logo h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.5px;
+}
+
+.auth-logo p {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* Form elements */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* Space between each form field */
+}
+
+/* Label + input grouped together */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input {
+  background-color: #111111;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: var(--color-text);
+  font-size: 15px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+  width: 100%;
+}
+
+.form-group input::placeholder {
+  color: #555555;
+}
+
+/* Highlight the active input with the primary colour */
+.form-group input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(253, 85, 100, 0.15);
+}
+
+/* Input in error state */
+.form-group input.input-error {
+  border-color: var(--color-error);
+}
+
+/* Primary action button */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition), transform var(--transition);
+  width: 100%;
+  margin-top: 4px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Disabled state — shown while the form is submitting */
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Google OAuth button */
+.btn-google {
+  background-color: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition), border-color var(--transition);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-google:hover {
+  background-color: var(--color-surface-hover);
+  border-color: #444444;
+}
+
+/* Divider between form and Google button */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: 4px 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+/* Error message shown below the form */
+.auth-error {
+  background-color: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--color-error);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Success message */
+.auth-success {
+  background-color: rgba(68, 187, 68, 0.1);
+  border: 1px solid rgba(68, 187, 68, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--color-success);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* "Already have an account? Login" link at the bottom */
+.auth-footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.auth-footer a {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.auth-footer a:hover {
+  opacity: 0.8;
+}

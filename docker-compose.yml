@@ -1,0 +1,637 @@
+# =============================================================================
+# docker-compose.yml
+# Project: DevMatch (Developer Tinder)
+#
+# PURPOSE:
+#   Orchestrates all infrastructure and application services locally.
+#   Docker Compose reads this file, creates a shared network, spins up
+#   containers in dependency order, and wires everything together.
+#
+# HOW TO USE:
+#   Start infra only (Step 1):
+#     docker-compose up zookeeper kafka redis postgres-auth postgres-user postgres-swipe postgres-match mongo-chat
+#
+#   Start everything (all steps complete):
+#     docker-compose up
+#
+#   Run in background (detached):
+#     docker-compose up -d
+#
+#   Stop all containers (keeps volume data):
+#     docker-compose down
+#
+#   Stop and DELETE all data (fresh start):
+#     docker-compose down -v   ← WARNING: wipes all databases
+#
+#   View logs for one service:
+#     docker-compose logs -f kafka
+#
+# PORT MAP (each service gets a unique host port to avoid conflicts):
+#   Infrastructure:
+#     ZooKeeper:        2181
+#     Kafka (internal): 9092  ← containers talk to Kafka on this port
+#     Kafka (external): 9093  ← host machine tools (e.g. Kafka UI) use this
+#     Redis:            6379
+#     postgres-auth:    5432
+#     postgres-user:    5433
+#     postgres-swipe:   5434
+#     postgres-match:   5435
+#     mongo-chat:       27017
+#
+#   Application services (added in later steps):
+#     api-gateway:          3000  ← all client traffic enters here
+#     auth-service:         3001
+#     user-service:         3002
+#     swipe-service:        3003
+#     match-service:        3004
+#     chat-service:         3005
+#     notification-service: 3006
+#     client (React):       5173
+# =============================================================================
+
+version: '3.9'
+
+# =============================================================================
+# NETWORKS
+#
+# All containers join the same bridge network (devmatch-network).
+# This means containers can reach each other using their container_name
+# as the hostname. For example, the auth-service can connect to Kafka
+# using the address "kafka:9092" — Docker's internal DNS resolves "kafka"
+# to the kafka container's IP automatically.
+#
+# Without a shared network, containers are isolated and cannot communicate.
+# =============================================================================
+networks:
+  devmatch-network:
+    driver: bridge    # Bridge = isolated virtual network on the host machine
+
+# =============================================================================
+# VOLUMES
+#
+# Named volumes live outside the container filesystem. When a container
+# is removed or recreated, the data in its named volume is preserved.
+#
+# Without volumes:
+#   - Every `docker-compose down` would wipe all your database data
+#   - You'd have to re-seed data from scratch on every restart
+#
+# With volumes:
+#   - `docker-compose down` keeps data intact
+#   - Only `docker-compose down -v` deletes volumes (use when you want a fresh DB)
+# =============================================================================
+volumes:
+  postgres-auth-data:   # Stores auth_db tables (users: id, email, password_hash)
+  postgres-user-data:   # Stores user_db tables (profiles: bio, skills, photo_url)
+  postgres-swipe-data:  # Stores swipe_db tables (swipes: swiper_id, target_id, direction)
+  postgres-match-data:  # Stores match_db tables (matches: id, user1_id, user2_id)
+  mongo-chat-data:      # Stores chat messages as MongoDB documents
+  redis-data:           # Stores Redis AOF log (rate limit counters, JWT blacklist)
+
+
+services:
+
+  # ===========================================================================
+  # ZOOKEEPER
+  #
+  # WHAT IT IS:
+  #   ZooKeeper is a distributed coordination service. Kafka uses it to:
+  #     - Track which Kafka brokers are alive
+  #     - Elect a leader broker for each topic partition
+  #     - Store topic configuration and consumer group offsets
+  #
+  # ANALOGY:
+  #   Think of ZooKeeper as the "manager" of the Kafka cluster. Kafka brokers
+  #   check in with ZooKeeper to register themselves and stay coordinated.
+  #
+  # NOTE:
+  #   Kafka 3.x+ supports KRaft mode (no ZooKeeper needed), but we use
+  #   ZooKeeper here because it's the standard setup in most tutorials
+  #   and production docs you'll find online. Good to learn this first.
+  #
+  # HEALTH CHECK:
+  #   Uses `nc` (netcat) to check if port 2181 is accepting connections.
+  #   The Kafka container won't start until this check passes (see depends_on).
+  # ===========================================================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: devmatch-zookeeper
+    networks:
+      - devmatch-network
+    ports:
+      - "2181:2181"                     # ZooKeeper client port
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181       # Port ZooKeeper listens on for connections
+      ZOOKEEPER_TICK_TIME: 2000         # Heartbeat interval in ms (2 seconds)
+                                        # All ZooKeeper timeouts are multiples of this
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s   # Check every 10 seconds
+      timeout: 5s     # Fail the check if no response within 5 seconds
+      retries: 5      # Mark unhealthy after 5 consecutive failures
+
+
+  # ===========================================================================
+  # KAFKA
+  #
+  # WHAT IT IS:
+  #   Kafka is a distributed event streaming platform (async message bus).
+  #   Services publish events to named "topics", and other services subscribe
+  #   to those topics to react to events — without knowing about each other.
+  #
+  # WHY WE USE IT:
+  #   Direct HTTP calls between services create tight coupling — if Match Service
+  #   calls Swipe Service directly and Swipe is down, the call fails.
+  #   With Kafka, Swipe Service publishes "swipe.created" and goes about its work.
+  #   Match Service reads the event when it's ready. The services are decoupled.
+  #
+  # TOPICS IN DEVMATCH:
+  #   user.created   → Auth Service emits  → User Service consumes
+  #   swipe.created  → Swipe Service emits → Match Service consumes
+  #   match.created  → Match Service emits → Chat + Notification Services consume
+  #   message.sent   → Chat Service emits  → Notification Service consumes
+  #
+  # TWO LISTENERS EXPLAINED:
+  #   Kafka needs to tell clients "here's how to reach me". The address depends
+  #   on who's asking:
+  #
+  #   PLAINTEXT://kafka:9092
+  #     → Used by other Docker containers on devmatch-network
+  #     → "kafka" resolves to the container via Docker DNS
+  #
+  #   PLAINTEXT_HOST://localhost:9093
+  #     → Used by tools running on YOUR laptop (e.g., Kafka UI, kafkacat)
+  #     → "localhost" resolves to your machine, which maps 9093 → container
+  #
+  # AUTO_CREATE_TOPICS:
+  #   Kafka will automatically create a topic the first time a producer
+  #   publishes to it. Good for development — no manual topic creation needed.
+  # ===========================================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: devmatch-kafka
+    networks:
+      - devmatch-network
+    depends_on:
+      zookeeper:
+        condition: service_healthy    # Kafka will not start until ZooKeeper is healthy
+    ports:
+      - "9092:9092"   # Internal port — containers on devmatch-network use this
+      - "9093:9093"   # External port — your laptop tools use this
+    environment:
+      KAFKA_BROKER_ID: 1
+        # Unique numeric ID for this broker. In a multi-broker cluster each
+        # would have a different ID (1, 2, 3...). We only have one broker.
+
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+        # Where Kafka finds ZooKeeper. "zookeeper" resolves via Docker DNS.
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+        # Maps listener names to security protocols.
+        # Both use PLAINTEXT (no TLS) since this is local dev.
+
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+        # The addresses Kafka tells clients to connect to.
+        # Containers use kafka:9092, host tools use localhost:9093.
+
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+        # Which listener brokers use to talk to each other (only one broker here).
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        # Kafka's internal __consumer_offsets topic needs replication.
+        # With only 1 broker, replication factor must be 1.
+
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+        # Same reasoning — required for exactly-once semantics support.
+
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+        # Minimum in-sync replicas. Must be <= replication factor (both = 1).
+
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+        # Topics are created automatically on first produce/consume.
+        # Great for dev — no kafka-topics.sh setup scripts needed.
+
+      KAFKA_LOG_RETENTION_HOURS: 168
+        # Keep messages for 7 days before deletion.
+        # In production this is tuned per topic based on business needs.
+
+    healthcheck:
+      # kafka-broker-api-versions is a Kafka CLI tool that pings the broker.
+      # If it gets a response, the broker is ready to accept connections.
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 15s   # Kafka takes longer to start than other services
+      timeout: 10s
+      retries: 10     # Give it up to 10 tries (150 seconds total)
+
+
+  # ===========================================================================
+  # REDIS
+  #
+  # WHAT IT IS:
+  #   Redis is an in-memory key-value store. It's extremely fast because
+  #   all data lives in RAM (with optional disk persistence).
+  #
+  # HOW DEVMATCH USES REDIS:
+  #
+  #   1. API Gateway — Rate Limiting
+  #      The gateway tracks how many requests each IP/user has made in a
+  #      rolling time window. Redis stores these counters:
+  #        Key:   "ratelimit:<ip>:<window>"
+  #        Value: request count
+  #        TTL:   auto-expires when the window ends
+  #
+  #   2. Auth Service — JWT Blacklist (logout)
+  #      When a user logs out, we can't "un-issue" a JWT — it's stateless.
+  #      Instead, we store the token's JTI (unique ID) in Redis with a TTL
+  #      matching the token's expiry. The API Gateway checks this blacklist.
+  #        Key:   "blacklist:<jti>"
+  #        Value: "1"
+  #        TTL:   token's remaining lifetime
+  #
+  # PERSISTENCE:
+  #   `--appendonly yes` enables AOF (Append-Only File) persistence.
+  #   Redis writes every operation to disk, so data survives container restarts.
+  #   Without this, all Redis data is lost when the container stops.
+  # ===========================================================================
+  redis:
+    image: redis:7.2-alpine            # Alpine variant = smaller image (~30MB vs ~100MB)
+    container_name: devmatch-redis
+    networks:
+      - devmatch-network
+    ports:
+      - "6379:6379"                    # Default Redis port
+    volumes:
+      - redis-data:/data               # AOF log persisted here
+    command: redis-server --appendonly yes
+    healthcheck:
+      # Redis replies "PONG" to a PING command when healthy.
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  # ===========================================================================
+  # POSTGRES — AUTH SERVICE
+  #
+  # OWNS: User identity data
+  #   Table: credentials
+  #     - id            UUID primary key
+  #     - email         unique, used for login
+  #     - password_hash bcrypt hash of the password (never store plaintext)
+  #     - created_at    timestamp
+  #
+  # WHY SEPARATE FROM USER SERVICE DB:
+  #   Auth Service owns "who you are" (identity).
+  #   User Service owns "what you look like" (profile).
+  #   Keeping them separate means:
+  #     - Auth can be locked down with stricter access controls
+  #     - A breach of profile data doesn't expose credentials
+  #     - Services can be scaled independently
+  #
+  # HOST PORT 5432:
+  #   Maps host:5432 → container:5432
+  #   Connect from your laptop: psql -h localhost -p 5432 -U auth_user -d auth_db
+  # ===========================================================================
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: devmatch-postgres-auth
+    networks:
+      - devmatch-network
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${POSTGRES_AUTH_USER}         # Loaded from .env file
+      POSTGRES_PASSWORD: ${POSTGRES_AUTH_PASSWORD} # Loaded from .env file
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    healthcheck:
+      # pg_isready checks if PostgreSQL is accepting connections on the given db/user.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_AUTH_USER} -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  # ===========================================================================
+  # POSTGRES — USER SERVICE
+  #
+  # OWNS: Developer profile data
+  #   Table: profiles
+  #     - id         UUID (matches the id from auth_db — same user, different data)
+  #     - name       display name
+  #     - bio        short developer bio
+  #     - skills     array of skills (e.g., ["React", "Node.js", "Python"])
+  #     - github_url link to GitHub profile
+  #     - photo_url  profile picture URL
+  #     - created_at timestamp
+  #
+  # HOW IT GETS POPULATED:
+  #   User Service does NOT expose a public registration endpoint.
+  #   Instead, Auth Service emits a `user.created` Kafka event after registration,
+  #   and User Service consumes that event to create a blank profile.
+  #   The developer then fills in their profile details via the User Service API.
+  #
+  # HOST PORT 5433:
+  #   Maps host:5433 → container:5432
+  #   Connect from your laptop: psql -h localhost -p 5433 -U user_user -d user_db
+  # ===========================================================================
+  postgres-user:
+    image: postgres:16-alpine
+    container_name: devmatch-postgres-user
+    networks:
+      - devmatch-network
+    ports:
+      - "5433:5432"                    # host:5433 → container:5432
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: ${POSTGRES_USER_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_USER_PASSWORD}
+    volumes:
+      - postgres-user-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER_USER} -d user_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  # ===========================================================================
+  # POSTGRES — SWIPE SERVICE
+  #
+  # OWNS: Swipe action records
+  #   Table: swipes
+  #     - id         UUID primary key
+  #     - swiper_id  UUID of the user who swiped
+  #     - target_id  UUID of the user who was swiped on
+  #     - direction  ENUM('LIKE', 'PASS')
+  #     - created_at timestamp
+  #
+  # WHY THIS DB IS CRITICAL FOR MATCHING:
+  #   When User B swipes right on User A, Match Service needs to know:
+  #   "Did User A already swipe right on User B?"
+  #   It does this via a gRPC call to Swipe Service which queries this DB:
+  #     SELECT * FROM swipes
+  #     WHERE swiper_id = 'userA' AND target_id = 'userB' AND direction = 'LIKE'
+  #   If a row exists → mutual match → emit match.created event.
+  #
+  # HOST PORT 5434:
+  #   Maps host:5434 → container:5432
+  # ===========================================================================
+  postgres-swipe:
+    image: postgres:16-alpine
+    container_name: devmatch-postgres-swipe
+    networks:
+      - devmatch-network
+    ports:
+      - "5434:5432"                    # host:5434 → container:5432
+    environment:
+      POSTGRES_DB: swipe_db
+      POSTGRES_USER: ${POSTGRES_SWIPE_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_SWIPE_PASSWORD}
+    volumes:
+      - postgres-swipe-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SWIPE_USER} -d swipe_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  # ===========================================================================
+  # POSTGRES — MATCH SERVICE
+  #
+  # OWNS: Confirmed mutual match records
+  #   Table: matches
+  #     - id         UUID primary key
+  #     - user1_id   UUID of first matched user (lower UUID alphabetically)
+  #     - user2_id   UUID of second matched user
+  #     - created_at timestamp of when the match was confirmed
+  #
+  # WHY user1_id IS ALWAYS THE LOWER UUID:
+  #   A match between User A and User B is the same as a match between
+  #   User B and User A. To avoid storing duplicates, we always store
+  #   the lexicographically smaller UUID as user1_id. This makes duplicate
+  #   checks simple:
+  #     SELECT * FROM matches WHERE user1_id = min(a,b) AND user2_id = max(a,b)
+  #
+  # HOST PORT 5435:
+  #   Maps host:5435 → container:5432
+  # ===========================================================================
+  postgres-match:
+    image: postgres:16-alpine
+    container_name: devmatch-postgres-match
+    networks:
+      - devmatch-network
+    ports:
+      - "5435:5432"                    # host:5435 → container:5432
+    environment:
+      POSTGRES_DB: match_db
+      POSTGRES_USER: ${POSTGRES_MATCH_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_MATCH_PASSWORD}
+    volumes:
+      - postgres-match-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_MATCH_USER} -d match_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  # ===========================================================================
+  # MONGODB — CHAT SERVICE
+  #
+  # OWNS: Chat message history
+  #   Collection: messages
+  #     Document shape:
+  #     {
+  #       _id:       ObjectId (auto-generated by MongoDB)
+  #       roomId:    string  — format: "match_<matchId>" (one room per match)
+  #       senderId:  string  — UUID of the user who sent the message
+  #       text:      string  — message content
+  #       sentAt:    Date    — timestamp
+  #     }
+  #
+  # WHY MONGODB INSTEAD OF POSTGRES FOR CHAT:
+  #   1. Write-heavy workload — messages are written constantly. MongoDB's
+  #      document model handles high-volume writes well.
+  #   2. Schema flexibility — we can add reactions, attachments, read receipts
+  #      later without running ALTER TABLE migrations.
+  #   3. Natural fit — a chat message IS a document. The document model
+  #      matches the data shape perfectly.
+  #   4. Query pattern — messages are almost always fetched by roomId + sorted
+  #      by sentAt. MongoDB handles this with a simple compound index.
+  #
+  # HOST PORT 27017:
+  #   Connect from your laptop:
+  #     mongosh "mongodb://chat_user:chat_pass@localhost:27017/chat_db"
+  # ===========================================================================
+  mongo-chat:
+    image: mongo:7.0
+    container_name: devmatch-mongo-chat
+    networks:
+      - devmatch-network
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_CHAT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_CHAT_PASSWORD}
+      MONGO_INITDB_DATABASE: chat_db   # Database created on first run
+    volumes:
+      - mongo-chat-data:/data/db       # All message documents persisted here
+    healthcheck:
+      # mongosh runs a ping command against the admin database.
+      # Returns { ok: 1 } if MongoDB is healthy.
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  # ===========================================================================
+  # AUTH SERVICE (Step 2)
+  #
+  # Handles user registration, login, JWT issuance, and Google OAuth.
+  # This is the first application service — it depends on:
+  #   - postgres-auth  (stores credentials)
+  #   - kafka          (emits user.created events)
+  #   - redis          (JWT blacklist for logout)
+  #
+  # BUILD:
+  #   Docker builds this image from services/auth-service/Dockerfile.
+  #   On `docker-compose up`, Docker checks if the image is already built.
+  #   To force a rebuild after code changes: docker-compose up --build auth-service
+  # ===========================================================================
+  auth-service:
+    build: ./backend/auth-service        # Build from the Dockerfile in this directory
+    container_name: devmatch-auth-service
+    networks:
+      - devmatch-network
+    depends_on:
+      postgres-auth:
+        condition: service_healthy      # Wait for auth DB to be ready
+      kafka:
+        condition: service_healthy      # Wait for Kafka to be ready
+      redis:
+        condition: service_healthy      # Wait for Redis to be ready
+    ports:
+      - "3001:3001"                     # host:3001 → container:3001
+    environment:
+      # Server
+      NODE_ENV: ${NODE_ENV}
+      AUTH_SERVICE_PORT: ${AUTH_SERVICE_PORT}
+
+      # PostgreSQL — auth_db connection
+      POSTGRES_AUTH_HOST: postgres-auth         # Docker container name (DNS resolves this)
+      POSTGRES_AUTH_PORT: 5432                  # Port inside the container
+      POSTGRES_AUTH_DB: auth_db
+      POSTGRES_AUTH_USER: ${POSTGRES_AUTH_USER}
+      POSTGRES_AUTH_PASSWORD: ${POSTGRES_AUTH_PASSWORD}
+
+      # Kafka
+      KAFKA_BROKER: ${KAFKA_BROKER}             # kafka:9092 (internal Docker address)
+
+      # Redis
+      REDIS_HOST: redis                         # Docker container name
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+
+      # Google OAuth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
+
+      # Frontend URL (for OAuth redirect and CORS)
+      FRONTEND_URL: http://localhost:5173
+    restart: unless-stopped
+      # Restart the container if it crashes, but not if manually stopped.
+      # During development, the service may fail on first start if Kafka
+      # is still initializing — restart ensures it comes up eventually.
+
+
+  # ===========================================================================
+  # FRONTEND — React App (Vite dev server)
+  #
+  # Runs the Vite dev server with hot module replacement (HMR).
+  # Source code is mounted as a volume so changes on your machine
+  # are reflected instantly without rebuilding the container.
+  #
+  # The frontend talks to the backend via the Vite proxy (/api → port 3001).
+  # In Step 3, the proxy target will change to the API Gateway (port 3000).
+  # ===========================================================================
+  frontend:
+    build: ./frontend
+    container_name: devmatch-frontend
+    networks:
+      - devmatch-network
+    depends_on:
+      - auth-service              # Auth service should be up before frontend starts
+    ports:
+      - "5173:5173"               # Vite dev server port
+    volumes:
+      - ./frontend:/app           # Mount source code — enables hot reloading
+      - /app/node_modules         # Keep container's node_modules (don't overwrite with host)
+    environment:
+      NODE_ENV: development
+    restart: unless-stopped
+
+
+  # ===========================================================================
+  # API GATEWAY (Step 3)
+  #
+  # Single entry point for all client traffic.
+  # Handles: rate limiting, JWT verification, request proxying.
+  # The frontend talks ONLY to this service (port 3000).
+  # This service routes requests to the correct downstream service.
+  # ===========================================================================
+  api-gateway:
+    build: ./backend/api-gateway
+    container_name: devmatch-api-gateway
+    networks:
+      - devmatch-network
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started   # Gateway just needs auth-service to exist, not be healthy
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      API_GATEWAY_PORT: ${API_GATEWAY_PORT}
+
+      # Redis — for rate limiting and JWT blacklist checks
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # JWT — gateway verifies tokens using the same secret as auth-service
+      JWT_SECRET: ${JWT_SECRET}
+
+      # Downstream service URLs (Docker container names as hostnames)
+      AUTH_SERVICE_URL: http://auth-service:3001
+      # USER_SERVICE_URL: http://user-service:3002       # Step 4
+      # SWIPE_SERVICE_URL: http://swipe-service:3003     # Step 5
+      # MATCH_SERVICE_URL: http://match-service:3004     # Step 6
+      # CHAT_SERVICE_URL: http://chat-service:3005       # Step 7
+      # NOTIFICATION_SERVICE_URL: http://notification-service:3006  # Step 8
+
+      # CORS — allow requests from the React frontend
+      CORS_ORIGIN: http://localhost:5173
+    restart: unless-stopped
+
+
+  # ===========================================================================
+  # APPLICATION SERVICES — COMING IN LATER STEPS
+  #
+  #   Step 4  → user-service         (port 3002)
+  #   Step 5  → swipe-service        (port 3003)
+  #   Step 6  → match-service        (port 3004)
+  #   Step 7  → chat-service         (port 3005)
+  #   Step 8  → notification-service (port 3006)
+  # ===========================================================================

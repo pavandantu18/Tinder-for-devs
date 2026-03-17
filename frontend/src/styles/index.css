@@ -1,0 +1,70 @@
+/* =============================================================================
+   src/styles/index.css
+   Project: DevMatch Frontend
+
+   PURPOSE:
+     Global styles applied to every page.
+     Resets browser defaults, sets base typography and the dark background.
+   ============================================================================= */
+
+/* CSS reset — remove inconsistent browser defaults */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Root variables — change these to retheme the whole app */
+:root {
+  --color-bg: #0f0f0f;           /* Near-black background */
+  --color-surface: #1a1a1a;      /* Slightly lighter card/surface colour */
+  --color-surface-hover: #222222;
+  --color-border: #2a2a2a;       /* Subtle border colour */
+  --color-primary: #fd5564;      /* Tinder red — primary action colour */
+  --color-primary-hover: #e04454;
+  --color-secondary: #1a96f0;    /* Blue — secondary/link colour */
+  --color-text: #ffffff;         /* Primary text */
+  --color-text-muted: #888888;   /* Secondary/placeholder text */
+  --color-error: #ff4444;        /* Error messages */
+  --color-success: #44bb44;      /* Success messages */
+  --border-radius: 12px;         /* Rounded corners throughout */
+  --transition: 0.2s ease;       /* Consistent animation speed */
+}
+
+html, body {
+  height: 100%;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased; /* Smoother fonts on macOS */
+}
+
+#root {
+  height: 100%;
+}
+
+/* Links */
+a {
+  color: var(--color-secondary);
+  text-decoration: none;
+  transition: opacity var(--transition);
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+/* Scrollbar styling (Webkit browsers) */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}

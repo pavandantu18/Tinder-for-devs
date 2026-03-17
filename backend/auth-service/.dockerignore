@@ -1,0 +1,25 @@
+# =============================================================================
+# .dockerignore
+# Service: auth-service
+#
+# PURPOSE:
+#   Tells Docker which files to EXCLUDE when building the image.
+#   Works exactly like .gitignore but for Docker's COPY instruction.
+#
+# WHY THIS MATTERS:
+#   Without this, `COPY . .` would copy node_modules into the image context,
+#   which is slow (hundreds of MB) and wrong (the image installs its own
+#   node_modules via npm install in the Dockerfile).
+# =============================================================================
+
+node_modules/
+npm-debug.log*
+
+# Don't copy .env into the image — environment variables are injected
+# at runtime by Docker Compose from the root .env file
+.env
+
+# Development files not needed in the container
+.dockerignore
+Dockerfile
+*.md

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      viewport meta tag is required for responsive design on mobile.
+      width=device-width: page width matches the device screen width.
+      initial-scale=1.0: no zoom on load.
+    -->
+    <title>DevMatch — Find Your Dev Partner</title>
+
+    <!-- Favicon — using emoji as a quick placeholder -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>" />
+  </head>
+  <body>
+    <!--
+      #root is where React mounts the entire application.
+      React replaces the contents of this div with the component tree.
+      Nothing here initially — React fills it in on load.
+    -->
+    <div id="root"></div>
+
+    <!--
+      Vite's entry point. In dev mode, Vite serves this as an ES module.
+      In build mode, Vite replaces this with a bundled script tag.
+    -->
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
