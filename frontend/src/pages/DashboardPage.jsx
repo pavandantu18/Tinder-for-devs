@@ -93,9 +93,14 @@ const DashboardPage = () => {
             : 'Complete your profile first to unlock the swipe feed.'}
         </div>
         {profile?.is_complete ? (
-          <Link to="/discover" style={{ display: 'inline-block', background: '#fd5564', color: '#fff', borderRadius: 8, padding: '11px 32px', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
-            Start Swiping →
-          </Link>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <Link to="/discover" style={{ display: 'inline-block', background: '#fd5564', color: '#fff', borderRadius: 8, padding: '11px 32px', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+              Start Swiping →
+            </Link>
+            <Link to="/matches" style={{ display: 'inline-block', border: '1px solid #fd5564', color: '#fd5564', borderRadius: 8, padding: '11px 24px', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+              ❤️ Matches
+            </Link>
+          </div>
         ) : (
           <Link to="/profile/edit" style={{ display: 'inline-block', border: '1px solid #fd5564', color: '#fd5564', borderRadius: 8, padding: '11px 32px', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
             Complete Profile →

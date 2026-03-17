@@ -23,6 +23,7 @@ import DashboardPage from './pages/DashboardPage';
 import ProfileEditPage from './pages/ProfileEditPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import DiscoverPage from './pages/DiscoverPage';
+import MatchesPage from './pages/MatchesPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const App = () => {
@@ -69,6 +70,15 @@ const App = () => {
         element={
           <ProtectedRoute>
             <DiscoverPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/matches"
+        element={
+          <ProtectedRoute>
+            <MatchesPage />
           </ProtectedRoute>
         }
       />

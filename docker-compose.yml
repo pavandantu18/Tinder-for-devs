@@ -600,7 +600,9 @@ services:
       auth-service:
         condition: service_started   # Gateway just needs auth-service to exist, not be healthy
       swipe-service:
-        condition: service_started   # Proxy routes need swipe-service to exist
+        condition: service_started
+      match-service:
+        condition: service_started
     ports:
       - "3000:3000"
     environment:
@@ -619,6 +621,7 @@ services:
       AUTH_SERVICE_URL: http://auth-service:3001
       USER_SERVICE_URL: http://user-service:3002
       SWIPE_SERVICE_URL: http://swipe-service:3003
+      MATCH_SERVICE_URL: http://match-service:3004
       # MATCH_SERVICE_URL: http://match-service:3004     # Step 6
       # CHAT_SERVICE_URL: http://chat-service:3005       # Step 7
       # NOTIFICATION_SERVICE_URL: http://notification-service:3006  # Step 8
@@ -711,9 +714,57 @@ services:
 
 
   # ===========================================================================
+  # MATCH SERVICE (Step 6)
+  #
+  # Detects mutual likes and creates matches.
+  # Consumes swipe.created from Kafka.
+  # Calls Swipe Service gRPC (CheckMutualLike) to confirm mutual like.
+  # Calls User Service gRPC (GetMultipleProfiles) to enrich GET /api/matches.
+  # Emits match.created Kafka event → Chat + Notification services consume.
+  # Exposes gRPC server (port 50054) for Chat Service (CheckMatchExists).
+  # ===========================================================================
+  match-service:
+    build:
+      context: .
+      dockerfile: ./backend/match-service/Dockerfile
+    container_name: devmatch-match-service
+    networks:
+      - devmatch-network
+    depends_on:
+      postgres-match:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      swipe-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+    ports:
+      - "3004:3004"     # HTTP API
+      - "50054:50054"   # gRPC server
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: 3004
+
+      POSTGRES_MATCH_HOST: postgres-match
+      POSTGRES_MATCH_PORT: 5432
+      POSTGRES_MATCH_DB: match_db
+      POSTGRES_MATCH_USER: ${POSTGRES_MATCH_USER}
+      POSTGRES_MATCH_PASSWORD: ${POSTGRES_MATCH_PASSWORD}
+
+      KAFKA_BROKER: ${KAFKA_BROKER}
+
+      # gRPC clients
+      SWIPE_GRPC_HOST: swipe-service:50053
+      USER_GRPC_HOST: user-service:50052
+
+      GRPC_MATCH_PORT: 50054
+    restart: unless-stopped
+
+
+  # ===========================================================================
   # APPLICATION SERVICES — COMING IN LATER STEPS
   #
-  #   Step 6  → match-service        (port 3004)
   #   Step 7  → chat-service         (port 3005)
   #   Step 8  → notification-service (port 3006)
   # ===========================================================================

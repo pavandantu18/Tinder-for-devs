@@ -139,13 +139,12 @@ const swipeServiceProxy = createServiceProxy(
   '/api/swipes'
 );
 
-// Match Service — handles /api/matches/* (match list, match detail)
-// Uncomment in Step 6
-// const matchServiceProxy = createServiceProxy(
-//   process.env.MATCH_SERVICE_URL || 'http://match-service:3004',
-//   'match-service',
-//   '/api/matches'
-// );
+// Match Service — handles /api/matches/*
+const matchServiceProxy = createServiceProxy(
+  process.env.MATCH_SERVICE_URL || 'http://match-service:3004',
+  'match-service',
+  '/api/matches'
+);
 
 // Chat Service — handles /api/chat/* (messages, rooms)
 // Uncomment in Step 7
@@ -167,7 +166,7 @@ module.exports = {
   authServiceProxy,
   userServiceProxy,
   swipeServiceProxy,
-  // matchServiceProxy,        // Step 6
+  matchServiceProxy,
   // chatServiceProxy,         // Step 7
   // notificationServiceProxy, // Step 8
 };
