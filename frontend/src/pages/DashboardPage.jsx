@@ -3,96 +3,91 @@
 // Project: DevMatch Frontend
 //
 // PURPOSE:
-//   Placeholder dashboard shown after successful login.
-//   This will become the main swipe interface in Step 9 (full frontend).
-//   For now it confirms auth is working end-to-end and provides a logout button.
+//   Main hub after login. Shows profile completion status and navigation
+//   to key features. Will become the swipe interface in Step 9.
 // =============================================================================
 
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { getMyProfile } from '../api/user';
 
 const DashboardPage = () => {
   const { user, authLogout } = useAuth();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load profile on mount to show completion status
+  useEffect(() => {
+    getMyProfile()
+      .then(({ profile }) => setProfile(profile))
+      .catch(() => {}) // Silently ignore — profile may still be initializing
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleLogout = async () => {
-    await authLogout(); // Blacklists token on server, clears local state
+    await authLogout();
     navigate('/login', { replace: true });
   };
 
   return (
     <div style={{
       minHeight: '100vh',
+      background: 'radial-gradient(ellipse at top, #2a0a0e 0%, #0f0f0f 60%)',
+      padding: '32px 16px',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
-      gap: '24px',
-      padding: '24px',
-      background: 'radial-gradient(ellipse at top, #2a0a0e 0%, #0f0f0f 60%)',
     }}>
 
-      {/* Welcome card */}
-      <div style={{
-        background: '#1a1a1a',
-        border: '1px solid #2a2a2a',
-        borderRadius: '12px',
-        padding: '40px',
-        textAlign: 'center',
-        maxWidth: '480px',
-        width: '100%',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-      }}>
-        <div style={{ fontSize: '56px', marginBottom: '16px' }}>💻</div>
-
-        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#fd5564', marginBottom: '8px' }}>
-          Welcome to DevMatch!
-        </h1>
-
-        <p style={{ color: '#888', fontSize: '15px', marginBottom: '24px' }}>
-          Logged in as <strong style={{ color: '#fff' }}>{user?.email}</strong>
-        </p>
-
-        {/* Placeholder message — this becomes the swipe UI in Step 9 */}
-        <div style={{
-          background: '#111',
-          border: '1px dashed #333',
-          borderRadius: '8px',
-          padding: '24px',
-          color: '#555',
-          fontSize: '14px',
-          marginBottom: '28px',
-        }}>
-          🚧 Swipe interface coming in Step 9
-          <br />
-          <span style={{ fontSize: '12px' }}>
-            Auth is working — JWT stored, Kafka event emitted
-          </span>
-        </div>
-
-        <button
-          onClick={handleLogout}
-          style={{
-            background: 'transparent',
-            border: '1px solid #333',
-            borderRadius: '8px',
-            color: '#888',
-            padding: '10px 24px',
-            fontSize: '14px',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.borderColor = '#fd5564';
-            e.target.style.color = '#fd5564';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.borderColor = '#333';
-            e.target.style.color = '#888';
-          }}
-        >
+      {/* Header */}
+      <div style={{ width: '100%', maxWidth: 560, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fd5564' }}>💻 DevMatch</h1>
+        <button onClick={handleLogout} style={{ background: 'none', border: '1px solid #333', borderRadius: 8, color: '#888', padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}>
           Sign out
         </button>
+      </div>
+
+      {/* Profile card */}
+      <div style={{ width: '100%', maxWidth: 560, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 12, padding: 28, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, overflow: 'hidden', flexShrink: 0 }}>
+            {profile?.photo_url ? <img src={profile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '💻'}
+          </div>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 16, color: '#fff' }}>{profile?.name || user?.email}</div>
+            <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>{user?.email}</div>
+          </div>
+        </div>
+
+        {/* Completion nudge */}
+        {!loading && !profile?.is_complete && (
+          <div style={{ background: 'rgba(255,170,0,0.08)', border: '1px solid rgba(255,170,0,0.25)', borderRadius: 8, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: '#ffaa00' }}>
+            ⚠ Complete your profile to appear in the discovery feed — add your name and at least one skill.
+          </div>
+        )}
+
+        {/* Skills preview */}
+        {profile?.skills?.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+            {profile.skills.map((s) => (
+              <span key={s} style={{ background: 'rgba(253,85,100,0.1)', border: '1px solid rgba(253,85,100,0.25)', borderRadius: 20, padding: '3px 10px', fontSize: 12, color: '#fd5564' }}>
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <Link to="/profile/edit" style={{ display: 'block', textAlign: 'center', background: '#fd5564', color: '#fff', borderRadius: 8, padding: '11px', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+          {profile?.is_complete ? 'Edit Profile' : 'Complete Profile →'}
+        </Link>
+      </div>
+
+      {/* Discover placeholder */}
+      <div style={{ width: '100%', maxWidth: 560, background: '#1a1a1a', border: '1px dashed #2a2a2a', borderRadius: 12, padding: 28, textAlign: 'center', color: '#555' }}>
+        <div style={{ fontSize: 36, marginBottom: 8 }}>🃏</div>
+        <div style={{ fontSize: 14 }}>Swipe interface — coming in Step 5 (Swipe Service)</div>
       </div>
 
     </div>

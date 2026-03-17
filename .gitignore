@@ -113,3 +113,6 @@ $RECYCLE.BIN/
 
 # Keep these VS Code files (useful for the whole team)
 !.vscode/extensions.json
+
+claude.md
+.gitignore

@@ -21,7 +21,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const rateLimitMiddleware = require('./middleware/rateLimit');
 const authenticate = require('./middleware/auth');
-const { authServiceProxy } = require('./routes/proxy');
+const { authServiceProxy, userServiceProxy } = require('./routes/proxy');
 
 const app = express();
 
@@ -73,9 +73,9 @@ app.use(authenticate);
 // strip any prefix from req.url — the downstream service receives the
 // full original path (e.g., /api/auth/login, not just /login).
 app.use(authServiceProxy);           // Intercepts /api/auth/*
+app.use(userServiceProxy);           // Intercepts /api/users/*
 
 // Uncomment as each service is built:
-// app.use(userServiceProxy);        // Intercepts /api/users/*   — Step 4
 // app.use(swipeServiceProxy);       // Intercepts /api/swipes/*  — Step 5
 // app.use(matchServiceProxy);       // Intercepts /api/matches/* — Step 6
 // app.use(chatServiceProxy);        // Intercepts /api/chat/*    — Step 7

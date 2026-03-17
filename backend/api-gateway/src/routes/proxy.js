@@ -125,13 +125,12 @@ const authServiceProxy = createServiceProxy(
   '/api/auth'   // pathFilter — only intercept /api/auth/* requests
 );
 
-// User Service — handles /api/users/* (profile CRUD)
-// Uncomment in Step 4
-// const userServiceProxy = createServiceProxy(
-//   process.env.USER_SERVICE_URL || 'http://user-service:3002',
-//   'user-service',
-//   '/api/users'
-// );
+// User Service — handles /api/users/* (profile CRUD, discovery)
+const userServiceProxy = createServiceProxy(
+  process.env.USER_SERVICE_URL || 'http://user-service:3002',
+  'user-service',
+  '/api/users'
+);
 
 // Swipe Service — handles /api/swipes/* (LIKE/PASS actions)
 // Uncomment in Step 5
@@ -167,7 +166,7 @@ const authServiceProxy = createServiceProxy(
 
 module.exports = {
   authServiceProxy,
-  // userServiceProxy,         // Step 4
+  userServiceProxy,
   // swipeServiceProxy,        // Step 5
   // matchServiceProxy,        // Step 6
   // chatServiceProxy,         // Step 7

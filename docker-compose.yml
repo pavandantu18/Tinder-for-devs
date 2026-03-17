@@ -615,7 +615,7 @@ services:
 
       # Downstream service URLs (Docker container names as hostnames)
       AUTH_SERVICE_URL: http://auth-service:3001
-      # USER_SERVICE_URL: http://user-service:3002       # Step 4
+      USER_SERVICE_URL: http://user-service:3002
       # SWIPE_SERVICE_URL: http://swipe-service:3003     # Step 5
       # MATCH_SERVICE_URL: http://match-service:3004     # Step 6
       # CHAT_SERVICE_URL: http://chat-service:3005       # Step 7
@@ -627,9 +627,48 @@ services:
 
 
   # ===========================================================================
+  # USER SERVICE (Step 4)
+  #
+  # Manages developer profiles.
+  # Consumes user.created Kafka events → creates blank profiles.
+  # Exposes HTTP API for profile CRUD and discovery feed.
+  # Exposes gRPC server (port 50052) for Match Service lookups (Step 6).
+  # ===========================================================================
+  user-service:
+    build:
+      context: .                                  # project root — gives access to proto/
+      dockerfile: ./backend/user-service/Dockerfile
+    container_name: devmatch-user-service
+    networks:
+      - devmatch-network
+    depends_on:
+      postgres-user:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "3002:3002"     # HTTP API
+      - "50052:50052"   # gRPC server (used by Match Service in Step 6)
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      USER_SERVICE_PORT: ${USER_SERVICE_PORT}
+
+      POSTGRES_USER_HOST: postgres-user
+      POSTGRES_USER_PORT: 5432
+      POSTGRES_USER_DB: user_db
+      POSTGRES_USER_USER: ${POSTGRES_USER_USER}
+      POSTGRES_USER_PASSWORD: ${POSTGRES_USER_PASSWORD}
+
+      KAFKA_BROKER: ${KAFKA_BROKER}
+
+      GRPC_USER_SERVICE_PORT: 50052
+    restart: unless-stopped
+
+
+  # ===========================================================================
   # APPLICATION SERVICES — COMING IN LATER STEPS
   #
-  #   Step 4  → user-service         (port 3002)
+  #   Step 5  → swipe-service        (port 3003)
   #   Step 5  → swipe-service        (port 3003)
   #   Step 6  → match-service        (port 3004)
   #   Step 7  → chat-service         (port 3005)
