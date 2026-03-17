@@ -51,6 +51,12 @@ const PUBLIC_ROUTES = [
   { method: 'GET',  path: '/health' },
 ];
 
+// Socket.IO paths bypass gateway JWT auth — the chat-service verifies the
+// token itself via its own io.use() middleware on the handshake auth object.
+// Socket.IO polling uses GET/POST on /socket.io/*, which doesn't carry
+// an Authorization header, so we must whitelist the entire path prefix.
+const SOCKET_IO_PREFIX = '/socket.io';
+
 // ---------------------------------------------------------------------------
 // isPublicRoute(method, path)
 //
@@ -74,10 +80,11 @@ const isPublicRoute = (method, path) => {
 // Skips verification for public routes; enforces JWT for everything else.
 // ---------------------------------------------------------------------------
 const authenticate = async (req, res, next) => {
-  // Skip auth check for public routes (login, register, Google OAuth)
-  if (isPublicRoute(req.method, req.path)) {
-    return next();
-  }
+  // Skip auth for public routes (login, register, Google OAuth)
+  if (isPublicRoute(req.method, req.path)) return next();
+
+  // Skip auth for Socket.IO — chat-service verifies JWT on the handshake
+  if (req.path.startsWith(SOCKET_IO_PREFIX)) return next();
 
   // Extract token from "Authorization: Bearer <token>"
   const authHeader = req.headers['authorization'];

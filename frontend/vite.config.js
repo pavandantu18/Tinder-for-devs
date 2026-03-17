@@ -35,14 +35,16 @@ export default defineConfig({
     host: '0.0.0.0', // Listen on all interfaces — needed for Docker to expose the port
 
     proxy: {
-      // Forward all /api requests to the auth service
-      // In Step 3, this will change to http://localhost:3000 (API Gateway)
       '/api': {
-        // All API traffic goes through the API Gateway (Step 3).
-        // The gateway handles auth, rate limiting, and routes to the right service.
-        // 'api-gateway' resolves via Docker DNS to the api-gateway container.
         target: 'http://api-gateway:3000',
         changeOrigin: true,
+      },
+      // Socket.IO WebSocket proxy — must be separate from /api
+      // ws: true enables WebSocket upgrade proxying (required for Socket.IO)
+      '/socket.io': {
+        target: 'http://api-gateway:3000',
+        changeOrigin: true,
+        ws: true,
       },
     },
   },

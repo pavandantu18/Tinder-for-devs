@@ -603,6 +603,8 @@ services:
         condition: service_started
       match-service:
         condition: service_started
+      chat-service:
+        condition: service_started
     ports:
       - "3000:3000"
     environment:
@@ -622,6 +624,7 @@ services:
       USER_SERVICE_URL: http://user-service:3002
       SWIPE_SERVICE_URL: http://swipe-service:3003
       MATCH_SERVICE_URL: http://match-service:3004
+      CHAT_SERVICE_URL: http://chat-service:3005
       # MATCH_SERVICE_URL: http://match-service:3004     # Step 6
       # CHAT_SERVICE_URL: http://chat-service:3005       # Step 7
       # NOTIFICATION_SERVICE_URL: http://notification-service:3006  # Step 8
@@ -763,8 +766,53 @@ services:
 
 
   # ===========================================================================
+  # CHAT SERVICE (Step 7)
+  #
+  # Real-time messaging via Socket.IO (WebSocket + HTTP on the same port).
+  # Consumes match.created Kafka events to register valid chat rooms.
+  # Calls Match Service gRPC (CheckMatchExists) to authorise connections.
+  # Stores messages in MongoDB.
+  # ===========================================================================
+  chat-service:
+    build:
+      context: .
+      dockerfile: ./backend/chat-service/Dockerfile
+    container_name: devmatch-chat-service
+    networks:
+      - devmatch-network
+    depends_on:
+      mongo-chat:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      match-service:
+        condition: service_started
+    ports:
+      - "3005:3005"   # HTTP REST + Socket.IO WebSocket (same port)
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: 3005
+
+      # MongoDB
+      MONGO_CHAT_USER: ${MONGO_CHAT_USER}
+      MONGO_CHAT_PASSWORD: ${MONGO_CHAT_PASSWORD}
+
+      # Kafka
+      KAFKA_BROKER: ${KAFKA_BROKER}
+
+      # gRPC client — verify matches before allowing chat
+      MATCH_GRPC_HOST: match-service:50054
+
+      # JWT — verify tokens on socket connection
+      JWT_SECRET: ${JWT_SECRET}
+
+      # CORS — allow the React frontend
+      CORS_ORIGIN: http://localhost:5173
+    restart: unless-stopped
+
+
+  # ===========================================================================
   # APPLICATION SERVICES — COMING IN LATER STEPS
   #
-  #   Step 7  → chat-service         (port 3005)
   #   Step 8  → notification-service (port 3006)
   # ===========================================================================

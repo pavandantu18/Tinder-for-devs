@@ -24,6 +24,7 @@ import ProfileEditPage from './pages/ProfileEditPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import DiscoverPage from './pages/DiscoverPage';
 import MatchesPage from './pages/MatchesPage';
+import ChatPage from './pages/ChatPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const App = () => {
@@ -79,6 +80,15 @@ const App = () => {
         element={
           <ProtectedRoute>
             <MatchesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/chat/:matchId"
+        element={
+          <ProtectedRoute>
+            <ChatPage />
           </ProtectedRoute>
         }
       />

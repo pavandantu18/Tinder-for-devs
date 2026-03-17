@@ -21,7 +21,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const rateLimitMiddleware = require('./middleware/rateLimit');
 const authenticate = require('./middleware/auth');
-const { authServiceProxy, userServiceProxy, swipeServiceProxy, matchServiceProxy } = require('./routes/proxy');
+const { authServiceProxy, userServiceProxy, swipeServiceProxy, matchServiceProxy, chatServiceProxy } = require('./routes/proxy');
 
 const app = express();
 
@@ -76,6 +76,7 @@ app.use(authServiceProxy);           // Intercepts /api/auth/*
 app.use(userServiceProxy);           // Intercepts /api/users/*
 app.use(swipeServiceProxy);          // Intercepts /api/swipes/*
 app.use(matchServiceProxy);          // Intercepts /api/matches/*
+app.use(chatServiceProxy);           // Intercepts /api/chat/* and /socket.io/*
 // app.use(chatServiceProxy);        // Intercepts /api/chat/*    — Step 7
 // app.use(notificationServiceProxy);// Intercepts /api/notifications/* — Step 8
 

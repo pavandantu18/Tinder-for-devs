@@ -1,0 +1,280 @@
+/* =============================================================================
+   src/styles/chat.css
+   ============================================================================= */
+
+.chat-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 680px;
+  margin: 0 auto;
+  background: var(--bg-primary);
+  position: relative;
+}
+
+/* ---------------------------------------------------------------------------
+   Header
+   --------------------------------------------------------------------------- */
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.chat-peer {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex: 1;
+}
+
+.chat-peer-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.chat-peer-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chat-peer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.chat-peer-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.connection-status {
+  font-size: 0.72rem;
+}
+.connection-status.online  { color: #22c55e; }
+.connection-status.offline { color: #6b7280; }
+
+.chat-error {
+  background: rgba(239,68,68,0.1);
+  color: #ef4444;
+  font-size: 0.82rem;
+  padding: 0.4rem 1.25rem;
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Messages list
+   --------------------------------------------------------------------------- */
+.messages-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+
+.chat-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Message bubbles
+   --------------------------------------------------------------------------- */
+.message-bubble {
+  max-width: 75%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.message-bubble.own    { align-self: flex-end;  align-items: flex-end; }
+.message-bubble.theirs { align-self: flex-start; align-items: flex-start; }
+
+/* Text */
+.message-text {
+  padding: 0.5rem 0.8rem;
+  border-radius: 18px;
+  font-size: 0.93rem;
+  line-height: 1.45;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.own    .message-text { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.theirs .message-text { background: var(--bg-card); color: var(--text-primary); border-bottom-left-radius: 4px; }
+
+/* Image */
+.msg-image {
+  max-width: 280px;
+  max-height: 280px;
+  border-radius: 14px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.msg-image:hover { opacity: 0.9; }
+
+/* Video */
+.msg-video {
+  max-width: 280px;
+  border-radius: 14px;
+  background: #000;
+}
+
+/* Code */
+.msg-code {
+  background: #0d1117;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre;
+  color: #e6edf3;
+  max-width: 420px;
+}
+
+.message-time {
+  font-size: 0.67rem;
+  color: var(--text-secondary);
+  padding: 0 0.2rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Code mode banner
+   --------------------------------------------------------------------------- */
+.code-mode-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 1.25rem;
+  background: rgba(99,102,241,0.12);
+  border-top: 1px solid rgba(99,102,241,0.2);
+  font-size: 0.8rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.code-mode-banner button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0 0.25rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Emoji picker float
+   --------------------------------------------------------------------------- */
+.emoji-wrapper {
+  position: absolute;
+  bottom: 80px;
+  left: 1.25rem;
+  z-index: 100;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+/* ---------------------------------------------------------------------------
+   Input bar
+   --------------------------------------------------------------------------- */
+.chat-input-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.6rem 1rem 0.8rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.chat-toolbar {
+  display: flex;
+  flex-direction: row;
+  gap: 0.1rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.tool-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+}
+.tool-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); }
+.tool-btn.active { color: var(--accent); background: rgba(99,102,241,0.12); }
+
+.chat-input {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+  padding: 0.55rem 0.9rem;
+  color: var(--text-primary);
+  font-size: 0.93rem;
+  resize: none;
+  max-height: 140px;
+  overflow-y: auto;
+  line-height: 1.4;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+.chat-input.code-input {
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.82rem;
+  border-radius: 10px;
+  background: #0d1117;
+  border-color: rgba(99,102,241,0.3);
+}
+.chat-input:focus { border-color: var(--accent); }
+.chat-input:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.chat-send-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.chat-send-btn:hover:not(:disabled) { opacity: 0.85; transform: scale(1.05); }
+.chat-send-btn:disabled { opacity: 0.3; cursor: not-allowed; }

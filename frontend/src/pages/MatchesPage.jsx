@@ -7,11 +7,12 @@
 // =============================================================================
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getMatches } from '../api/match';
 import '../styles/matches.css';
 
 const MatchesPage = () => {
+  const navigate              = useNavigate();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
@@ -84,8 +85,10 @@ const MatchesPage = () => {
                   Matched {new Date(match.createdAt).toLocaleDateString()}
                 </p>
 
-                {/* Chat button — active in Step 7 */}
-                <button className="btn-chat" disabled title="Chat coming in Step 7">
+                <button
+                  className="btn-chat"
+                  onClick={() => navigate(`/chat/${match.id}`, { state: { matchedUser: match.user } })}
+                >
                   💬 Message
                 </button>
               </div>

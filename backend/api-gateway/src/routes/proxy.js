@@ -146,13 +146,25 @@ const matchServiceProxy = createServiceProxy(
   '/api/matches'
 );
 
-// Chat Service — handles /api/chat/* (messages, rooms)
-// Uncomment in Step 7
-// const chatServiceProxy = createServiceProxy(
-//   process.env.CHAT_SERVICE_URL || 'http://chat-service:3005',
-//   'chat-service',
-//   '/api/chat'
-// );
+// Chat Service — handles /api/chat/* (REST) and /socket.io/* (WebSocket)
+// WebSocket proxy: ws: true enables upgrade proxying for Socket.IO
+const chatServiceProxy = createProxyMiddleware({
+  target: process.env.CHAT_SERVICE_URL || 'http://chat-service:3005',
+  pathFilter: ['/api/chat', '/socket.io'],
+  changeOrigin: true,
+  ws: true,   // ← enables WebSocket upgrade proxying for Socket.IO
+  on: {
+    proxyReq: (proxyReq) => {
+      proxyReq.setHeader('X-Gateway-Request', 'true');
+    },
+    error: (err, req, res) => {
+      console.error('[Proxy] Error routing to chat-service:', err.message);
+      if (!res.headersSent) {
+        res.status(503).json({ error: 'chat-service is temporarily unavailable.' });
+      }
+    },
+  },
+});
 
 // Notification Service — handles /api/notifications/*
 // Uncomment in Step 8
@@ -167,6 +179,7 @@ module.exports = {
   userServiceProxy,
   swipeServiceProxy,
   matchServiceProxy,
+  chatServiceProxy,
   // chatServiceProxy,         // Step 7
   // notificationServiceProxy, // Step 8
 };
